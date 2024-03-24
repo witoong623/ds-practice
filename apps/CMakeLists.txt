@@ -9,7 +9,7 @@ find_package(CUDAToolkit REQUIRED)
 
 find_package(NVDS REQUIRED)
 
-# find_package(X11 REQUIRED)
+target_compile_features(person-monitor PUBLIC cxx_std_20)
 
 target_link_libraries(person-monitor
   PRIVATE

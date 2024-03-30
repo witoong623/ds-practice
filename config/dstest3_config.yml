@@ -32,7 +32,7 @@ streammux:
 
 osd:
   process-mode: 0
-  display-text: 0
+  display-text: 1
 
 tiler:
   width: 1280

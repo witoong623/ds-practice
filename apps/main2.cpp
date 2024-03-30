@@ -92,14 +92,14 @@ tiler_src_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
     guint person_count = 0;
     NvDsMetaList * l_frame = NULL;
     NvDsMetaList * l_obj = NULL;
-    //NvDsDisplayMeta *display_meta = NULL;
+    NvDsDisplayMeta *display_meta = NULL;
 
     NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta (buf);
 
     for (l_frame = batch_meta->frame_meta_list; l_frame != NULL;
       l_frame = l_frame->next) {
         NvDsFrameMeta *frame_meta = (NvDsFrameMeta *) (l_frame->data);
-        //int offset = 0;
+        int offset = 0;
         for (l_obj = frame_meta->obj_meta_list; l_obj != NULL;
                 l_obj = l_obj->next) {
             obj_meta = (NvDsObjectMeta *) (l_obj->data);
@@ -112,13 +112,12 @@ tiler_src_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
                 num_rects++;
             }
         }
-          g_print ("Frame Number = %d Number of objects = %d "
-            "Vehicle Count = %d Person Count = %d\n",
-            frame_meta->frame_num, num_rects, vehicle_count, person_count);
-#if 0
+
         display_meta = nvds_acquire_display_meta_from_pool(batch_meta);
-        NvOSD_TextParams *txt_params  = &display_meta->text_params;
-        txt_params->display_text = g_malloc0 (MAX_DISPLAY_LEN);
+        // is it safe?
+        NvOSD_TextParams *txt_params  = &display_meta->text_params[0];
+        display_meta->num_labels = 1;
+        txt_params->display_text = static_cast<char*>(g_malloc0 (MAX_DISPLAY_LEN));
         offset = snprintf(txt_params->display_text, MAX_DISPLAY_LEN, "Person = %d ", person_count);
         offset = snprintf(txt_params->display_text + offset , MAX_DISPLAY_LEN, "Vehicle = %d ", vehicle_count);
 
@@ -142,7 +141,6 @@ tiler_src_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
         txt_params->text_bg_clr.alpha = 1.0;
 
         nvds_add_display_meta_to_frame(frame_meta, display_meta);
-#endif
 
     }
     return GST_PAD_PROBE_OK;
@@ -304,7 +302,7 @@ main (int argc, char *argv[])
 {
   GMainLoop *loop = NULL;
   GstElement *pipeline = NULL, *streammux = NULL, *sink = NULL, *pgie = NULL,
-      *queue1, *queue2, *queue3, *queue4, *queue5, *nvvidconv = NULL,
+      *nvvidconv = NULL,
       *nvosd = NULL, *tiler = NULL, *nvdslogger = NULL;
   GstBus *bus = NULL;
   guint bus_watch_id;
@@ -407,13 +405,6 @@ main (int argc, char *argv[])
     pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
   }
 
-  /* Add queue elements between every two elements */
-  queue1 = gst_element_factory_make ("queue", "queue1");
-  queue2 = gst_element_factory_make ("queue", "queue2");
-  queue3 = gst_element_factory_make ("queue", "queue3");
-  queue4 = gst_element_factory_make ("queue", "queue4");
-  queue5 = gst_element_factory_make ("queue", "queue5");
-
   /* Use nvdslogger for perf measurement. */
   nvdslogger = gst_element_factory_make ("nvdslogger", "nvdslogger");
 
@@ -483,13 +474,13 @@ main (int argc, char *argv[])
 
   /* Set up the pipeline */
   /* we add all elements into the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), queue1, pgie, queue2, nvdslogger, tiler,
-      queue3, nvvidconv, queue4, nvosd, queue5, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), pgie, nvdslogger, tiler,
+    nvvidconv, nvosd, sink, NULL);
   /* we link the elements together
   * nvstreammux -> nvinfer -> nvdslogger -> nvtiler -> nvvidconv -> nvosd
   * -> video-renderer */
-  if (!gst_element_link_many (streammux, queue1, pgie, queue2, nvdslogger, tiler,
-        queue3, nvvidconv, queue4, nvosd, queue5, sink, NULL)) {
+  if (!gst_element_link_many (streammux, pgie, nvdslogger, tiler,
+        nvvidconv, nvosd, sink, NULL)) {
     g_printerr ("Elements could not be linked. Exiting.\n");
     return -1;
   }

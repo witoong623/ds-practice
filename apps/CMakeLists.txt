@@ -1,5 +1,5 @@
 add_executable(ds-practice
-  main.cpp
+  main2.cpp
 )
 
 find_package(PkgConfig REQUIRED)

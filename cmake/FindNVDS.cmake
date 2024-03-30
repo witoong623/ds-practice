@@ -9,6 +9,7 @@ SET(NVDS_LIBS
   nvds_yml_parser
 
   nvdsgst_meta
+  nvdsgst_helper
 )
 
 message(STATUS "NVDS_INSTALL_DIR ${NVDS_INSTALL_DIR}")

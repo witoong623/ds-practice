@@ -10,10 +10,10 @@ if [ -f $gstreamer_cache ]; then
     rm $gstreamer_cache
 fi
 
-config="config/dstest2_config.yml"
+config="config/dstest3_config.yml"
 
 if [ "$1" == "Release" ]; then
-    ./build-release/apps/person-monitor $config
+    ./build-debug/apps/ds-practice $config
 else
-    ./build-debug/apps/person-monitor $config
+    ./build-debug/apps/ds-practice $config
 fi

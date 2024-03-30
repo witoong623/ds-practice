@@ -312,7 +312,6 @@ main (int argc, char *argv[])
   guint i =0, num_sources = 0;
   guint tiler_rows, tiler_columns;
   guint pgie_batch_size;
-  gboolean yaml_config = FALSE;
   NvDsGieType pgie_type = NVDS_GIE_PLUGIN_INFER;
   PERF_MODE = g_getenv("NVDS_TEST3_PERF_MODE") &&
       !g_strcmp0(g_getenv("NVDS_TEST3_PERF_MODE"), "1");
@@ -334,13 +333,7 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   /* Parse inference plugin type */
-  yaml_config = (g_str_has_suffix (argv[1], ".yml") ||
-          g_str_has_suffix (argv[1], ".yaml"));
-
-  if (yaml_config) {
-    RETURN_ON_PARSER_ERROR(nvds_parse_gie_type(&pgie_type, argv[1],
-                "primary-gie"));
-  }
+  RETURN_ON_PARSER_ERROR(nvds_parse_gie_type(&pgie_type, argv[1], "primary-gie"));
 
   /* Create gstreamer elements */
   /* Create Pipeline element that will form a connection of other elements */
@@ -357,31 +350,23 @@ main (int argc, char *argv[])
 
   GList *src_list = NULL ;
 
-  if (yaml_config) {
+  RETURN_ON_PARSER_ERROR(nvds_parse_source_list(&src_list, argv[1], "source-list"));
 
-    RETURN_ON_PARSER_ERROR(nvds_parse_source_list(&src_list, argv[1], "source-list"));
-
-    GList * temp = src_list;
-    while(temp) {
-      num_sources++;
-      temp=temp->next;
-    }
-    g_list_free(temp);
-  } else {
-      num_sources = argc - 1;
+  GList * temp = src_list;
+  while(temp) {
+    num_sources++;
+    temp = temp->next;
   }
+  g_list_free(temp);
 
   for (i = 0; i < num_sources; i++) {
     GstPad *sinkpad, *srcpad;
     gchar pad_name[16] = { };
 
-    GstElement *source_bin= NULL;
-    if (g_str_has_suffix (argv[1], ".yml") || g_str_has_suffix (argv[1], ".yaml")) {
-      g_print("Now playing : %s\n",(char*)(src_list)->data);
-      source_bin = create_source_bin (i, (char*)(src_list)->data);
-    } else {
-      source_bin = create_source_bin (i, argv[i + 1]);
-    }
+    GstElement *source_bin = NULL;
+    g_print("Now playing : %s\n",(char*)(src_list)->data);
+    source_bin = create_source_bin (i, (char*)(src_list)->data);
+
     if (!source_bin) {
       g_printerr ("Failed to create source bin. Exiting.\n");
       return -1;
@@ -410,14 +395,10 @@ main (int argc, char *argv[])
     gst_object_unref (srcpad);
     gst_object_unref (sinkpad);
 
-    if (yaml_config) {
-      src_list = src_list->next;
-    }
+    src_list = src_list->next;
   }
 
-  if (yaml_config) {
-    g_list_free(src_list);
-  }
+  g_list_free(src_list);
 
   /* Use nvinfer or nvinferserver to infer on batched frame. */
   if (pgie_type == NVDS_GIE_PLUGIN_INFER_SERVER) {
@@ -462,66 +443,29 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  if (yaml_config) {
+  RETURN_ON_PARSER_ERROR(nvds_parse_streammux(streammux, argv[1],"streammux"));
 
-    RETURN_ON_PARSER_ERROR(nvds_parse_streammux(streammux, argv[1],"streammux"));
+  RETURN_ON_PARSER_ERROR(nvds_parse_gie(pgie, argv[1], "primary-gie"));
 
-    RETURN_ON_PARSER_ERROR(nvds_parse_gie(pgie, argv[1], "primary-gie"));
-
-    g_object_get (G_OBJECT (pgie), "batch-size", &pgie_batch_size, NULL);
-    if (pgie_batch_size != num_sources) {
-      g_printerr
-          ("WARNING: Overriding infer-config batch-size (%d) with number of sources (%d)\n",
-          pgie_batch_size, num_sources);
-      g_object_set (G_OBJECT (pgie), "batch-size", num_sources, NULL);
-    }
-
-    RETURN_ON_PARSER_ERROR(nvds_parse_osd(nvosd, argv[1],"osd"));
-
-    tiler_rows = (guint) sqrt (num_sources);
-    tiler_columns = (guint) ceil (1.0 * num_sources / tiler_rows);
-    g_object_set (G_OBJECT (tiler), "rows", tiler_rows, "columns", tiler_columns, NULL);
-
-    RETURN_ON_PARSER_ERROR(nvds_parse_tiler(tiler, argv[1], "tiler"));
-    if(prop.integrated) {
-      RETURN_ON_PARSER_ERROR(nvds_parse_3d_sink(sink, argv[1], "sink"));
-    } else {
-      RETURN_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, argv[1], "sink"));
-    }
-
+  g_object_get (G_OBJECT (pgie), "batch-size", &pgie_batch_size, NULL);
+  if (pgie_batch_size != num_sources) {
+    g_printerr
+        ("WARNING: Overriding infer-config batch-size (%d) with number of sources (%d)\n",
+        pgie_batch_size, num_sources);
+    g_object_set (G_OBJECT (pgie), "batch-size", num_sources, NULL);
   }
-  else {
 
-    g_object_set (G_OBJECT (streammux), "batch-size", num_sources, NULL);
+  RETURN_ON_PARSER_ERROR(nvds_parse_osd(nvosd, argv[1],"osd"));
 
-    g_object_set (G_OBJECT (streammux), "width", MUXER_OUTPUT_WIDTH, "height",
-        MUXER_OUTPUT_HEIGHT,
-        "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);
+  tiler_rows = (guint) sqrt (num_sources);
+  tiler_columns = (guint) ceil (1.0 * num_sources / tiler_rows);
+  g_object_set (G_OBJECT (tiler), "rows", tiler_rows, "columns", tiler_columns, NULL);
 
-    /* Configure the nvinfer element using the nvinfer config file. */
-    g_object_set (G_OBJECT (pgie),
-        "config-file-path", "dstest3_pgie_config.txt", NULL);
-
-    /* Override the batch-size set in the config file with the number of sources. */
-    g_object_get (G_OBJECT (pgie), "batch-size", &pgie_batch_size, NULL);
-    if (pgie_batch_size != num_sources) {
-      g_printerr
-          ("WARNING: Overriding infer-config batch-size (%d) with number of sources (%d)\n",
-          pgie_batch_size, num_sources);
-      g_object_set (G_OBJECT (pgie), "batch-size", num_sources, NULL);
-    }
-
-    tiler_rows = (guint) sqrt (num_sources);
-    tiler_columns = (guint) ceil (1.0 * num_sources / tiler_rows);
-    /* we set the tiler properties here */
-    g_object_set (G_OBJECT (tiler), "rows", tiler_rows, "columns", tiler_columns,
-        "width", TILED_OUTPUT_WIDTH, "height", TILED_OUTPUT_HEIGHT, NULL);
-
-    g_object_set (G_OBJECT (nvosd), "process-mode", OSD_PROCESS_MODE,
-        "display-text", OSD_DISPLAY_TEXT, NULL);
-
-    g_object_set (G_OBJECT (sink), "qos", 0, NULL);
-
+  RETURN_ON_PARSER_ERROR(nvds_parse_tiler(tiler, argv[1], "tiler"));
+  if(prop.integrated) {
+    RETURN_ON_PARSER_ERROR(nvds_parse_3d_sink(sink, argv[1], "sink"));
+  } else {
+    RETURN_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, argv[1], "sink"));
   }
 
   if (PERF_MODE) {
@@ -562,16 +506,7 @@ main (int argc, char *argv[])
   gst_object_unref (tiler_src_pad);
 
   /* Set the pipeline to "playing" state */
-  if (yaml_config) {
-    g_print ("Using file: %s\n", argv[1]);
-  }
-  else {
-    g_print ("Now playing:");
-    for (i = 0; i < num_sources; i++) {
-      g_print (" %s,", argv[i + 1]);
-    }
-    g_print ("\n");
-  }
+  g_print ("Using file: %s\n", argv[1]);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* Wait till pipeline encounters an error or EOS */

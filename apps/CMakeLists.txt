@@ -1,5 +1,5 @@
-add_executable(person-monitor
-  deepstream_test2_app.c
+add_executable(ds-practice
+  main.cpp
 )
 
 find_package(PkgConfig REQUIRED)
@@ -9,16 +9,16 @@ find_package(CUDAToolkit REQUIRED)
 
 find_package(NVDS REQUIRED)
 
-target_compile_features(person-monitor PUBLIC cxx_std_20)
+target_compile_features(ds-practice PUBLIC cxx_std_20)
 
-target_link_libraries(person-monitor
+target_link_libraries(ds-practice
   PRIVATE
     CUDA::cudart
     PkgConfig::GSTREAMER
     ${NVDS_LIBRARIES}
 )
 
-target_include_directories(person-monitor
+target_include_directories(ds-practice
   PRIVATE
     ${NVDS_INCLUDE_DIRS}
 )

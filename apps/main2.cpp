@@ -38,27 +38,6 @@
 #define PGIE_CLASS_ID_VEHICLE 0
 #define PGIE_CLASS_ID_PERSON 2
 
-/* By default, OSD process-mode is set to GPU_MODE. To change mode, set as:
- * 0: CPU mode
- * 1: GPU mode
- */
-#define OSD_PROCESS_MODE 1
-
-/* By default, OSD will not display text. To display text, change this to 1 */
-#define OSD_DISPLAY_TEXT 0
-
-/* The muxer output resolution must be set if the input streams will be of
- * different resolution. The muxer will scale all the input frames to this
- * resolution. */
-#define MUXER_OUTPUT_WIDTH 1920
-#define MUXER_OUTPUT_HEIGHT 1080
-
-/* Muxer batch formation timeout, for e.g. 40 millisec. Should ideally be set
- * based on the fastest source's framerate. */
-#define MUXER_BATCH_TIMEOUT_USEC 40000
-
-#define TILED_OUTPUT_WIDTH 1280
-#define TILED_OUTPUT_HEIGHT 720
 
 /* NVIDIA Decoder source pad memory feature. This feature signifies that source
  * pads having this capability will push GstBuffers containing cuda buffers. */

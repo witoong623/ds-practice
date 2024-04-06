@@ -1,5 +1,7 @@
 add_executable(ds-practice
-  main2.cpp
+  # main2.cpp
+  main.cpp
+  Pipeline.cpp
 )
 
 find_package(PkgConfig REQUIRED)
@@ -21,4 +23,5 @@ target_link_libraries(ds-practice
 target_include_directories(ds-practice
   PRIVATE
     ${NVDS_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )

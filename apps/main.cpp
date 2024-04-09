@@ -24,14 +24,7 @@
 #include <gst/gst.h>
 #include <glib.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdexcept>
-#include <cuda_runtime_api.h>
-#include "nvds_yml_parser.h"
-
-#include "gstnvdsmeta.h"
 
 #include "Pipeline.h"
 

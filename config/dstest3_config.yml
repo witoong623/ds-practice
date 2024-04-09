@@ -26,6 +26,7 @@ source-list:
 
 streammux:
   batch-size: 1
+  live-source: 1
   batched-push-timeout: 40000
   width: 1920
   height: 1080

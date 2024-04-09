@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <gst/gst.h>
 #include <glib.h>
 
@@ -10,11 +12,14 @@ class Pipeline {
 
     ~Pipeline();
 
-
+    guint bus_watch_id;
+    GstElement *pipeline;
   private:
+    void create_sources(gchar *config_filepath);
+    GstElement *create_source_bin (guint index, gchar *uri);
+
     GMainLoop *loop;
 
-    GstElement *pipeline;
     GstElement *streammux;
     GstElement *sink;
     GstElement *pgie;
@@ -22,4 +27,6 @@ class Pipeline {
     GstElement *nvosd;
     GstElement *tiler;
     GstElement *nvdslogger;
+
+    std::vector<GstElement *> sources;
 };

@@ -51,7 +51,14 @@ main (int argc, char *argv[])
   }
 
   g_print ("Running...\n");
+  gst_element_set_state (pipeline->pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
+
+  // clean up
+  gst_element_set_state (pipeline->pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline->pipeline));
+  g_source_remove (pipeline->bus_watch_id);
+  g_main_loop_unref (loop);
 
   return 0;
 }

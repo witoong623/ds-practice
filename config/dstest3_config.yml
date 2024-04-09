@@ -26,10 +26,17 @@ source-list:
 
 streammux:
   batch-size: 1
-  live-source: 1
+  live-source: 0
   batched-push-timeout: 40000
   width: 1920
   height: 1080
+
+tracker:
+  tracker-width: 960
+  tracker-height: 544
+  gpu-id: 0
+  ll-lib-file: /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+  ll-config-file: /opt/nvidia/deepstream/deepstream-6.4/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
 
 osd:
   process-mode: 0

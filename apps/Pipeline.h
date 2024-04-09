@@ -23,6 +23,7 @@ class Pipeline {
     GstElement *streammux;
     GstElement *sink;
     GstElement *pgie;
+    GstElement *tracker;
     GstElement *nvvidconv;
     GstElement *nvosd;
     GstElement *tiler;

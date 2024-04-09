@@ -114,8 +114,10 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   gst_bin_add (GST_BIN (pipeline), streammux);
 
   sources = create_sources(config_filepath);
-  
+
   pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
+
+  tracker = gst_element_factory_make ("nvtracker", "tracker");
 
   nvdslogger = gst_element_factory_make ("nvdslogger", "nvdslogger");
 
@@ -137,6 +139,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   THROW_ON_PARSER_ERROR(nvds_parse_gie(pgie, config_filepath, "primary-gie"));
 
+  THROW_ON_PARSER_ERROR(nvds_parse_tracker(tracker, config_filepath, "tracker"));
+
   // TODO: override batch-size of pgie if number of sources isn't equal batch-size
 
   THROW_ON_PARSER_ERROR(nvds_parse_osd(nvosd, config_filepath,"osd"));
@@ -145,7 +149,6 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
-  // TODO: handle pipline bus
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
   gst_object_unref (bus);
@@ -154,7 +157,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
     gst_bin_add (GST_BIN (pipeline), source);
   }
 
-  gst_bin_add_many (GST_BIN (pipeline), pgie, nvdslogger, tiler,
+  gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, nvdslogger, tiler,
     nvvidconv, nvosd, sink, NULL);
 
   for (int i = 0; i < sources.size(); i++) {
@@ -186,7 +189,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
     gst_object_unref (sinkpad);
   }
 
-  if (!gst_element_link_many (streammux, pgie, nvdslogger, tiler,
+  if (!gst_element_link_many (streammux, pgie, tracker, nvdslogger, tiler,
         nvvidconv, nvosd, sink, NULL)) {
     auto err_msg = "Elements could not be linked. Exiting.\n";
     g_printerr ("%s", err_msg);

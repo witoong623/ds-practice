@@ -15,7 +15,7 @@ class Pipeline {
     guint bus_watch_id;
     GstElement *pipeline;
   private:
-    void create_sources(gchar *config_filepath);
+    std::vector<GstElement *> create_sources(gchar *config_filepath);
     GstElement *create_source_bin (guint index, gchar *uri);
 
     GMainLoop *loop;

@@ -113,7 +113,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   gst_bin_add (GST_BIN (pipeline), streammux);
 
-  create_sources(config_filepath);
+  sources = create_sources(config_filepath);
   
   pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
 
@@ -195,7 +195,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 }
 
 // create a source bin and add it to sources field
-void Pipeline::create_sources(gchar *config_filepath) {
+std::vector<GstElement *> Pipeline::create_sources(gchar *config_filepath) {
   GList *src_list = NULL ;
 
   THROW_ON_PARSER_ERROR(nvds_parse_source_list(&src_list, config_filepath, "source-list"));
@@ -209,6 +209,8 @@ void Pipeline::create_sources(gchar *config_filepath) {
   }
   g_list_free(temp);
 
+  std::vector<GstElement *> source_bins;
+
   for (int i = 0; i < num_sources; i++) {
     GstElement *source_bin = create_source_bin (i, (char*)(src_list)->data);
     if (!source_bin) {
@@ -217,12 +219,14 @@ void Pipeline::create_sources(gchar *config_filepath) {
       throw std::runtime_error(err_msg);
     }
 
-    sources.push_back(source_bin);
+    source_bins.push_back(source_bin);
 
     src_list = src_list->next;
   }
 
   g_free(src_list);
+
+  return source_bins;
 }
 
 GstElement *Pipeline::create_source_bin(guint index, gchar *uri) {

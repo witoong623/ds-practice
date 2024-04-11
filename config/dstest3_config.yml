@@ -22,7 +22,9 @@
 
 source-list:
   #semicolon separated uri. For ex- uri1;uri2;uriN;
-  list: file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4;
+  # list: file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_1080p_h264.mp4;
+  list: file:///home/triton-server/ds-practice/videos/vehicle-counting.mp4;
+  
 
 streammux:
   batch-size: 1

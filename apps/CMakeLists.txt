@@ -1,7 +1,7 @@
 add_executable(ds-practice
-  # main2.cpp
   main.cpp
   Pipeline.cpp
+  PipelineCallback.cpp
 )
 
 find_package(PkgConfig REQUIRED)

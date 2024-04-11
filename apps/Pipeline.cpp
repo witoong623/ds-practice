@@ -7,6 +7,8 @@
 #include "gst-nvmessage.h"
 #include "nvds_yml_parser.h"
 
+#include "PipelineCallback.h"
+
 
 // TODO: use logging system to do log
 
@@ -16,90 +18,6 @@
     g_printerr("%s", err_msg); \
     throw std::runtime_error(err_msg); \
   }
-
-#define GST_CAPS_FEATURES_NVMM "memory:NVMM"
-
-void cb_newpad (GstElement * decodebin, GstPad * decoder_src_pad, gpointer data) {
-  GstCaps *caps = gst_pad_get_current_caps (decoder_src_pad);
-  if (!caps) {
-    caps = gst_pad_query_caps (decoder_src_pad, NULL);
-  }
-  const GstStructure *str = gst_caps_get_structure (caps, 0);
-  const gchar *name = gst_structure_get_name (str);
-  GstElement *source_bin = (GstElement *) data;
-  GstCapsFeatures *features = gst_caps_get_features (caps, 0);
-
-  /* Need to check if the pad created by the decodebin is for video and not
-   * audio. */
-  if (!strncmp (name, "video", 5)) {
-    /* Link the decodebin pad only if decodebin has picked nvidia
-     * decoder plugin nvdec_*. We do this by checking if the pad caps contain
-     * NVMM memory features. */
-    if (gst_caps_features_contains (features, GST_CAPS_FEATURES_NVMM)) {
-      /* Get the source bin ghost pad */
-      GstPad *bin_ghost_pad = gst_element_get_static_pad (source_bin, "src");
-      if (!gst_ghost_pad_set_target (GST_GHOST_PAD (bin_ghost_pad),
-              decoder_src_pad)) {
-        g_printerr ("Failed to link decoder src pad to source bin ghost pad\n");
-      }
-      gst_object_unref (bin_ghost_pad);
-    } else {
-      g_printerr ("Error: Decodebin did not pick nvidia decoder plugin.\n");
-    }
-  }
-}
-
-gboolean
-bus_call (GstBus * bus, GstMessage * msg, gpointer data)
-{
-  GMainLoop *loop = (GMainLoop *) data;
-  switch (GST_MESSAGE_TYPE (msg)) {
-    case GST_MESSAGE_EOS:
-      g_print ("End of stream\n");
-      g_main_loop_quit (loop);
-      break;
-    case GST_MESSAGE_WARNING:
-    {
-      gchar *debug;
-      GError *error;
-      gst_message_parse_warning (msg, &error, &debug);
-      g_printerr ("WARNING from element %s: %s\n",
-          GST_OBJECT_NAME (msg->src), error->message);
-      g_free (debug);
-      g_printerr ("Warning: %s\n", error->message);
-      g_error_free (error);
-      break;
-    }
-    case GST_MESSAGE_ERROR:
-    {
-      gchar *debug;
-      GError *error;
-      gst_message_parse_error (msg, &error, &debug);
-      g_printerr ("ERROR from element %s: %s\n",
-          GST_OBJECT_NAME (msg->src), error->message);
-      if (debug)
-        g_printerr ("Error details: %s\n", debug);
-      g_free (debug);
-      g_error_free (error);
-      g_main_loop_quit (loop);
-      break;
-    }
-    case GST_MESSAGE_ELEMENT:
-    {
-      if (gst_nvmessage_is_stream_eos (msg)) {
-        guint stream_id;
-        if (gst_nvmessage_parse_stream_eos (msg, &stream_id)) {
-          g_print ("Got EOS from stream %d\n", stream_id);
-        }
-      }
-      break;
-    }
-    default:
-      break;
-  }
-  return TRUE;
-}
-
 
 Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   pipeline = gst_pipeline_new ("ds-practice-pipeline");
@@ -150,7 +68,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
+  bus_watch_id = gst_bus_add_watch (bus, pipeline_bus_watch, loop);
   gst_object_unref (bus);
 
   for (auto source : sources) {
@@ -257,7 +175,7 @@ GstElement *Pipeline::create_source_bin(guint index, gchar *uri) {
   /* Connect to the "pad-added" signal of the decodebin which generates a
    * callback once a new pad for raw data has beed created by the decodebin */
   g_signal_connect (G_OBJECT (uri_decode_bin), "pad-added",
-      G_CALLBACK (cb_newpad), bin);
+      G_CALLBACK (src_newpad_cb), bin);
   // g_signal_connect (G_OBJECT (uri_decode_bin), "child-added",
   //     G_CALLBACK (decodebin_child_added), bin);
 

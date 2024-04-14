@@ -85,3 +85,8 @@ void src_newpad_cb (GstElement * decodebin, GstPad * decoder_src_pad, gpointer d
     }
   }
 }
+
+GstPadProbeReturn analytics_callback_osd_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+  // TODO: call analytic function here
+  return GST_PAD_PROBE_OK;
+}

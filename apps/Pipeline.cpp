@@ -67,6 +67,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
+  register_probs();
+
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   bus_watch_id = gst_bus_add_watch (bus, pipeline_bus_watch, loop);
   gst_object_unref (bus);
@@ -193,4 +195,14 @@ GstElement *Pipeline::create_source_bin(guint index, gchar *uri) {
   }
 
   return bin;
+}
+
+void Pipeline::register_probs() {
+  GstPad *osd_sink_pad = gst_element_get_static_pad(nvosd, "sink");
+  if (!osd_sink_pad) {
+    g_print ("Unable to get sink pad\n");
+  } else {
+    gst_pad_add_probe (osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+      analytics_callback_osd_prob, nullptr, nullptr);
+  }
 }

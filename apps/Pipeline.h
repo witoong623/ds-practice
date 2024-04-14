@@ -17,6 +17,8 @@ class Pipeline {
   private:
     std::vector<GstElement *> create_sources(gchar *config_filepath);
     GstElement *create_source_bin (guint index, gchar *uri);
+    // should be called after all elements are configured
+    void register_probs();
 
     GMainLoop *loop;
 

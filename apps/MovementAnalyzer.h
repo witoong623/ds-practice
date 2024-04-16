@@ -51,7 +51,7 @@ class Line {
 
     inline guint line_id() { return _line_id; }
   private:
-    static guint _running_line_id;
+    inline static guint _running_line_id = 0;
 
     guint _line_id;
     Point start;

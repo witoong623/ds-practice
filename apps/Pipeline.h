@@ -5,6 +5,8 @@
 #include <gst/gst.h>
 #include <glib.h>
 
+#include "Analytic.h"
+
 
 class Pipeline {
   public:
@@ -14,6 +16,7 @@ class Pipeline {
 
     guint bus_watch_id;
     GstElement *pipeline;
+    inline Analytic &analytic() { return _analytic; }
   private:
     std::vector<GstElement *> create_sources(gchar *config_filepath);
     GstElement *create_source_bin (guint index, gchar *uri);
@@ -31,5 +34,6 @@ class Pipeline {
     GstElement *tiler;
     GstElement *nvdslogger;
 
+    Analytic _analytic;
     std::vector<GstElement *> sources;
 };

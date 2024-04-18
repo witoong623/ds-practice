@@ -1,9 +1,10 @@
 add_executable(ds-practice
+  Analytic.cpp
+  Geometry.cpp
   main.cpp
+  MovementAnalyzer.cpp
   Pipeline.cpp
   PipelineCallback.cpp
-  Geometry.cpp
-  MovementAnalyzer.cpp
 )
 
 find_package(PkgConfig REQUIRED)

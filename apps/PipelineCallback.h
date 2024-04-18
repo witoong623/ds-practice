@@ -11,3 +11,6 @@ void src_newpad_cb (GstElement * decodebin, GstPad * decoder_src_pad, gpointer d
 
 // call to necessary analytic classes
 GstPadProbeReturn analytics_callback_osd_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data);
+
+// call to necessary function to draw on specific frame
+GstPadProbeReturn drawing_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data);

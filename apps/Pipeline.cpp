@@ -7,6 +7,7 @@
 #include "gst-nvmessage.h"
 #include "nvds_yml_parser.h"
 
+#include "Analytic.h"
 #include "PipelineCallback.h"
 
 
@@ -200,9 +201,21 @@ GstElement *Pipeline::create_source_bin(guint index, gchar *uri) {
 void Pipeline::register_probs() {
   GstPad *osd_sink_pad = gst_element_get_static_pad(nvosd, "sink");
   if (!osd_sink_pad) {
-    g_print ("Unable to get sink pad\n");
+    g_print ("Unable to get osd sink pad\n");
   } else {
     gst_pad_add_probe (osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
       analytics_callback_osd_prob, nullptr, nullptr);
   }
+
+  gst_object_unref(osd_sink_pad);
+
+  GstPad *tiler_sink_pad = gst_element_get_static_pad(tiler, "sink");
+  if (!tiler_sink_pad) {
+    g_print ("Unable to get tiler's sink pad\n");
+  } else {
+    gst_pad_add_probe (tiler_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+      drawing_callback_tiler_prob, this, nullptr);
+  }
+
+  gst_object_unref(tiler_sink_pad);
 }

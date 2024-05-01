@@ -28,7 +28,7 @@ enum class LineCrossDirection {
 
 class ObjectHistory {
   public:
-    explicit ObjectHistory(guint object_id, std::vector<Point> anchor_points);
+    explicit ObjectHistory(guint object_id, BoundingBox initial_bounding_box);
 
     // points on the object bounding box that represent body of the object
     // tell which side of the line ID the point is on

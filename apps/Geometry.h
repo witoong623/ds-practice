@@ -1,7 +1,9 @@
 #pragma once
 
-#include <glib.h>
+#include <initializer_list>
+#include <vector>
 
+#include <glib.h>
 
 struct Point {
   explicit Point(gint x, gint y);
@@ -30,4 +32,22 @@ class Vector {
 
   private:
     float calculate_magnitude() const;
+};
+
+
+enum class AnchorPoint {
+  TopLeft,
+  TopRight,
+  BottomLeft,
+  BottomRight,
+};
+
+class BoundingBox {
+  public:
+    explicit BoundingBox(Point top_left, Point bottom_right);
+
+    std::vector<Point> get_anchor_points(std::initializer_list<AnchorPoint> anchor_points) const;
+
+    Point top_left;
+    Point bottom_right;
 };

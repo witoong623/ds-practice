@@ -91,5 +91,8 @@ LineCrossDirection Line::does_object_cross_line(ObjectHistory& obj_hist) const {
   }
 }
 
-ObjectHistory::ObjectHistory(guint object_id, std::vector<Point> anchor_points) :
-  _object_id(object_id), _anchor_points(anchor_points) {}
+ObjectHistory::ObjectHistory(guint object_id, BoundingBox initial_bounding_box):
+  _object_id(object_id),
+  _anchor_points(initial_bounding_box.get_anchor_points({AnchorPoint::TopLeft, AnchorPoint::TopRight,
+                                                         AnchorPoint::BottomLeft, AnchorPoint::BottomRight})) {
+}

@@ -96,3 +96,9 @@ ObjectHistory::ObjectHistory(guint object_id, BoundingBox initial_bounding_box):
   _anchor_points(initial_bounding_box.get_anchor_points({AnchorPoint::TopLeft, AnchorPoint::TopRight,
                                                          AnchorPoint::BottomLeft, AnchorPoint::BottomRight})) {
 }
+
+void ObjectHistory::update_bounding_box(BoundingBox bbox) {
+  auto anchor_points = bbox.get_anchor_points({AnchorPoint::TopLeft, AnchorPoint::TopRight,
+                                               AnchorPoint::BottomLeft, AnchorPoint::BottomRight});
+  _anchor_points = anchor_points;
+}

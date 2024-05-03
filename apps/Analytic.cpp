@@ -5,6 +5,8 @@
 #include "Geometry.h"
 #include "MovementAnalyzer.h"
 
+constexpr gint STALE_OBJECT_THRESHOLD = 1800;
+
 // TODO: create line from configuration
 Analytic::Analytic(): lines({Line(Point(100, 440), Point(1800, 440))}) {}
 
@@ -27,7 +29,6 @@ void Analytic::draw_on_frame(NvDsBatchMeta *batch_meta) {
 }
 
 void Analytic::update_analytic_state(NvDsBatchMeta *batch_meta) {
-  // TODO: loop through every frame_meta in batch_meta
   NvDsFrameMeta *frame_meta = nvds_get_nth_frame_meta (batch_meta->frame_meta_list, 0);
   NvDsObjectMetaList *obj_meta_list = frame_meta->obj_meta_list;
 
@@ -56,6 +57,20 @@ void Analytic::update_analytic_state(NvDsBatchMeta *batch_meta) {
                                   Point(obj_bbox->left + obj_bbox->width,
                                         obj_bbox->top + obj_bbox->height));
       history->update_bounding_box(new_bbox);
+    }
+    history->last_update_frame = frame_meta->frame_num;
+  }
+
+  remove_stale_object_history(frame_meta->frame_num);
+}
+
+void Analytic::remove_stale_object_history(gint current_frame) {
+  for (auto source_info : source_analytic_infos) {
+    for (auto object_history : source_info.second->object_histories) {
+      if (current_frame - object_history.second->last_update_frame > STALE_OBJECT_THRESHOLD) {
+        delete object_history.second;
+        source_info.second->object_histories.erase(object_history.first);
+      }
     }
   }
 }

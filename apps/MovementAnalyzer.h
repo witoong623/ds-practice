@@ -37,6 +37,8 @@ class ObjectHistory {
     inline guint object_id() { return _object_id; }
     inline std::vector<Point> & anchor_points() { return _anchor_points; }
     void update_bounding_box(BoundingBox bbox);
+
+    gint last_update_frame;
   private:
     guint _object_id;
     std::vector<Point> _anchor_points;

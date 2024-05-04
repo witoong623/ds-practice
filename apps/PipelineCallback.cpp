@@ -89,22 +89,12 @@ void src_newpad_cb (GstElement * decodebin, GstPad * decoder_src_pad, gpointer d
   }
 }
 
-GstPadProbeReturn analytics_callback_osd_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+GstPadProbeReturn analytics_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
   Pipeline *pipeline = (Pipeline *) user_data;
   GstBuffer *buf = (GstBuffer *) info->data;
   NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta (buf);
 
   pipeline->analytic().update_analytic_state(batch_meta);
-
-  return GST_PAD_PROBE_OK;
-}
-
-GstPadProbeReturn drawing_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
-  // drawing must be done before tiler finish otherwise the coordinate is messup due to tiler resizing
-  Pipeline *pipeline = (Pipeline *) user_data;
-  GstBuffer *buf = (GstBuffer *) info->data;
-  NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta (buf);
-
   pipeline->analytic().draw_on_frame (batch_meta);
 
   return GST_PAD_PROBE_OK;

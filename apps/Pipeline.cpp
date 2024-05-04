@@ -204,7 +204,7 @@ void Pipeline::register_probs() {
     g_print ("Unable to get osd sink pad\n");
   } else {
     gst_pad_add_probe (osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      analytics_callback_osd_prob, nullptr, nullptr);
+      analytics_callback_osd_prob, this, nullptr);
   }
 
   gst_object_unref(osd_sink_pad);

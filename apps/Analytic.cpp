@@ -5,7 +5,7 @@
 #include "Geometry.h"
 #include "MovementAnalyzer.h"
 
-constexpr gint STALE_OBJECT_THRESHOLD = 1800;
+constexpr gint STALE_OBJECT_THRESHOLD = 250;
 
 // TODO: create line from configuration
 Analytic::Analytic(): lines({Line(Point(100, 440), Point(1800, 440))}) {}
@@ -42,7 +42,7 @@ void Analytic::update_analytic_state(NvDsBatchMeta *batch_meta) {
   }
 
   for (; obj_meta_list != nullptr; obj_meta_list = obj_meta_list->next) {
-    NvDsObjectMeta *obj_meta = (NvDsObjectMeta*) obj_meta_list->data;
+    NvDsObjectMeta *obj_meta = static_cast<NvDsObjectMeta*>(obj_meta_list->data);
 
     auto obj_bbox = &obj_meta->detector_bbox_info.org_bbox_coords;
     ObjectHistory * history = source_info->object_histories[obj_meta->object_id];

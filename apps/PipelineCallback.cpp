@@ -90,8 +90,8 @@ void src_newpad_cb (GstElement * decodebin, GstPad * decoder_src_pad, gpointer d
 }
 
 GstPadProbeReturn analytics_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
-  Pipeline *pipeline = (Pipeline *) user_data;
-  GstBuffer *buf = (GstBuffer *) info->data;
+  Pipeline *pipeline = static_cast<Pipeline *>(user_data);
+  GstBuffer *buf = static_cast<GstBuffer *>(info->data);
   NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta (buf);
 
   pipeline->analytic().update_analytic_state(batch_meta);

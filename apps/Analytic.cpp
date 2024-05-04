@@ -65,11 +65,14 @@ void Analytic::update_analytic_state(NvDsBatchMeta *batch_meta) {
 }
 
 void Analytic::remove_stale_object_history(gint current_frame) {
-  for (auto source_info : source_analytic_infos) {
-    for (auto object_history : source_info.second->object_histories) {
-      if (current_frame - object_history.second->last_update_frame > STALE_OBJECT_THRESHOLD) {
-        delete object_history.second;
-        source_info.second->object_histories.erase(object_history.first);
+  for (auto [source_id, source_info] : source_analytic_infos) {
+    for (auto history_it = source_info->object_histories.begin(); history_it != source_info->object_histories.end();) {
+      auto& [object_id, object_history] = *history_it;
+      if (current_frame - object_history->last_update_frame > STALE_OBJECT_THRESHOLD) {
+        delete object_history;
+        history_it = source_info->object_histories.erase(history_it);
+      } else {
+        history_it++;
       }
     }
   }

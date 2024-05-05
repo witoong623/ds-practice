@@ -1,14 +1,25 @@
 #include "Analytic.h"
 
+#include <algorithm>
+
 #include "gstnvdsmeta.h"
 
 #include "Geometry.h"
 #include "MovementAnalyzer.h"
 
 constexpr gint STALE_OBJECT_THRESHOLD = 250;
+constexpr guint FIRST_SOURCE = 0;
 
-// TODO: create line from configuration
-Analytic::Analytic(): lines({Line(Point(100, 440), Point(1800, 440))}) {}
+Analytic::Analytic() {
+  // TODO: create line from configuration
+  Line line {Point(100, 440), Point(1800, 440)};
+  // create LineCrossing
+  line_crossing_infos[FIRST_SOURCE].push_back({
+    FIRST_SOURCE,
+    line,
+    {LineCrossDirection::RightToLeft, LineCrossDirection::LeftToRight}
+  });
+}
 
 void Analytic::draw_on_frame(NvDsBatchMeta *batch_meta) {
   // TODO: drawing based on configuration for each source
@@ -62,6 +73,8 @@ void Analytic::update_analytic_state(NvDsBatchMeta *batch_meta) {
   }
 
   remove_stale_object_history(frame_meta->frame_num);
+
+  update_line_crossing_analysis(frame_meta->frame_num);
 }
 
 void Analytic::remove_stale_object_history(gint current_frame) {
@@ -73,6 +86,26 @@ void Analytic::remove_stale_object_history(gint current_frame) {
         history_it = source_info->object_histories.erase(history_it);
       } else {
         history_it++;
+      }
+    }
+  }
+}
+
+void Analytic::update_line_crossing_analysis(gint current_frame) {
+  for (auto& [source_id, line_crossings] : line_crossing_infos) {
+    for (auto& analytic_info : line_crossings) {
+      for (auto& [object_id, object_history] : source_analytic_infos[source_id]->object_histories) {
+        if (object_history->last_update_frame != current_frame) {
+          continue;
+        }
+        LineCrossDirection direction = analytic_info.line.does_object_cross_line(*object_history);
+        auto find_ret = std::find(analytic_info.count_directions.begin(),
+                                  analytic_info.count_directions.end(),
+                                  direction);
+        if (find_ret != analytic_info.count_directions.end()) {
+          analytic_info.crossing_direction_counts[direction]++;
+        }
+        // TODO: alert about this object crossing the line
       }
     }
   }

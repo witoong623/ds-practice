@@ -65,6 +65,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   THROW_ON_PARSER_ERROR(nvds_parse_osd(nvosd, config_filepath,"osd"));
 
   // TODO: calculate tiler column
+  THROW_ON_PARSER_ERROR(nvds_parse_tiler(tiler, config_filepath, "tiler"));
 
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 

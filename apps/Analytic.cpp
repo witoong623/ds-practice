@@ -1,6 +1,7 @@
 #include "Analytic.h"
 
 #include <algorithm>
+#include <cstdio>
 
 #include "gstnvdsmeta.h"
 
@@ -9,6 +10,7 @@
 
 constexpr gint STALE_OBJECT_THRESHOLD = 250;
 constexpr guint FIRST_SOURCE = 0;
+constexpr guint MAX_DISPLAY_LEN = 64;
 
 Analytic::Analytic() {
   // TODO: create line from configuration
@@ -26,6 +28,8 @@ void Analytic::draw_on_frame(NvDsBatchMeta *batch_meta) {
   NvDsFrameMeta *frame_meta = nvds_get_nth_frame_meta (batch_meta->frame_meta_list, 0);
 
   NvDsDisplayMeta *display_meta = nvds_acquire_display_meta_from_pool(batch_meta);
+
+  // drawing configuration
   NvOSD_LineParams *line_params = &display_meta->line_params[0];
   // coordinate is coordinate after frame is resized from streammux
   line_params->x1 = 100;
@@ -36,6 +40,31 @@ void Analytic::draw_on_frame(NvDsBatchMeta *batch_meta) {
   // default values are 0, which make it invisible due to alpha = 0
   line_params->line_color = (NvOSD_ColorParams){1.0, 0.0, 0.0, 1.0};
   display_meta->num_lines++;
+
+  // drawing result of analytics
+  NvOSD_TextParams *text_params = &display_meta->text_params[0];
+  display_meta->num_labels++;
+  text_params->display_text = static_cast<char*>(g_malloc0(MAX_DISPLAY_LEN));
+  std::snprintf(text_params->display_text, MAX_DISPLAY_LEN, "In: %lu, Out: %lu",
+                line_crossing_infos[FIRST_SOURCE][0].crossing_direction_counts[LineCrossDirection::RightToLeft],
+                line_crossing_infos[FIRST_SOURCE][0].crossing_direction_counts[LineCrossDirection::LeftToRight]);
+
+  text_params->x_offset = 100;
+  text_params->y_offset = 440;
+
+  text_params->font_params.font_name = "Serif";
+  text_params->font_params.font_size = 12;
+  text_params->font_params.font_color.red = 1.0;
+  text_params->font_params.font_color.green = 1.0;
+  text_params->font_params.font_color.blue = 1.0;
+  text_params->font_params.font_color.alpha = 1.0;
+
+  text_params->set_bg_clr = TRUE;
+  text_params->text_bg_clr.red = 0.0;
+  text_params->text_bg_clr.green = 0.0;
+  text_params->text_bg_clr.blue = 0.0;
+  text_params->text_bg_clr.alpha = 1.0;
+
   nvds_add_display_meta_to_frame(frame_meta, display_meta);
 }
 

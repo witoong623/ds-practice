@@ -209,4 +209,14 @@ void Pipeline::register_probs() {
   }
 
   gst_object_unref(tiler_sink_pad);
+
+  GstPad *pgie_sink_pad = gst_element_get_static_pad(pgie, "sink");
+  if (!pgie_sink_pad) {
+    g_print ("Unable to get pgie's sink pad\n");
+  } else {
+    gst_pad_add_probe (pgie_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+      frame_buffer_callback_nvinfer_prob, this, nullptr);
+  }
+
+  gst_object_unref(pgie_sink_pad);
 }

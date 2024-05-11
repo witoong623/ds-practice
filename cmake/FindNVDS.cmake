@@ -8,6 +8,8 @@ SET(NVDS_LIBS
   nvds_meta
   nvds_yml_parser
 
+  nvbufsurface
+
   nvdsgst_meta
   nvdsgst_helper
 )

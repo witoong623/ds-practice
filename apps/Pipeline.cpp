@@ -46,9 +46,13 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
 
+  buffer_nvvidconv = gst_element_factory_make ("nvvideoconvert", "buffer-converter");
+
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
   sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
+
+  buffer_sink = gst_element_factory_make ("fakesink", "buffer-sink");
 
   if (!streammux_tee || !pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink) {
     auto err_msg = "One element could not be created. Exiting.\n";
@@ -76,7 +80,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   }
 
   gst_bin_add_many (GST_BIN (pipeline), streammux, streammux_tee, pgie, tracker, nvdslogger, tiler,
-    nvvidconv, nvosd, sink, NULL);
+    nvvidconv, nvosd, sink, buffer_nvvidconv, buffer_sink, NULL);
 
   // link sources to streammux
   for (int i = 0; i < sources.size(); i++) {
@@ -131,10 +135,33 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   gst_object_unref(tee_pgie_src_pad);
   gst_object_unref(pgie_sink_pad);
-  
+
+  GstPad *tee_buf_conv_src_pad = gst_element_request_pad_simple(streammux_tee, "src_%u");
+  GstPad *buf_conv_sink_pad = gst_element_get_static_pad(buffer_nvvidconv, "sink");
+  if (!tee_buf_conv_src_pad || !buf_conv_sink_pad) {
+    auto err_msg = "Request pad from tee or buffer converter failed. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+
+  if (gst_pad_link(tee_buf_conv_src_pad, buf_conv_sink_pad) != GST_PAD_LINK_OK) {
+    auto err_msg = "Tee and buffer converter could not be linked. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+
+  gst_object_unref(tee_buf_conv_src_pad);
+  gst_object_unref(buf_conv_sink_pad);
+
   // link the rest of the pipeline
   if (!gst_element_link_many(pgie, tracker, nvdslogger, tiler, nvvidconv, nvosd, sink, NULL)) {
     auto err_msg = "Elements could not be linked. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+
+  if (!gst_element_link_many(buffer_nvvidconv, buffer_sink, NULL)) {
+    auto err_msg = "Buffer elements could not be linked. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
   }

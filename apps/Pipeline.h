@@ -31,6 +31,8 @@ class Pipeline {
     GstElement *pgie;
     GstElement *tracker;
     GstElement *nvvidconv;
+    GstElement *buffer_nvvidconv;
+    GstElement *buffer_sink;
     GstElement *nvosd;
     GstElement *tiler;
     GstElement *nvdslogger;

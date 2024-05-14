@@ -12,4 +12,4 @@ void src_newpad_cb (GstElement * decodebin, GstPad * decoder_src_pad, gpointer d
 // call to necessary analytic classes
 GstPadProbeReturn analytics_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data);
 
-GstPadProbeReturn frame_buffer_callback_nvinfer_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data);
+GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data);

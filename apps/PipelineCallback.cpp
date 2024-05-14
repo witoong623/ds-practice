@@ -101,7 +101,7 @@ GstPadProbeReturn analytics_callback_tiler_prob (GstPad *pad, GstPadProbeInfo *i
   return GST_PAD_PROBE_OK;
 }
 
-GstPadProbeReturn frame_buffer_callback_nvinfer_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
   // https://forums.developer.nvidia.com/t/deepstream-sample-code-snippet/142683
   Pipeline *pipeline = static_cast<Pipeline *>(user_data);
   GstBuffer *buf = static_cast<GstBuffer *>(info->data);
@@ -125,11 +125,11 @@ GstPadProbeReturn frame_buffer_callback_nvinfer_prob (GstPad *pad, GstPadProbeIn
   create_params.layout = NvBufSurfaceLayout::NVBUF_LAYOUT_BLOCK_LINEAR;
   create_params.memType = NvBufSurfaceMemType::NVBUF_MEM_SYSTEM;
 
-  if (!NvBufSurfaceCreate(&host_surface, surface->batchSize, &create_params)) {
+  if (NvBufSurfaceCreate(&host_surface, surface->batchSize, &create_params) != 0) {
     g_printerr("Error: Failed to create host surface\n");
   }
 
-  if (!NvBufSurfaceCopy(surface, host_surface)) {
+  if (NvBufSurfaceCopy(surface, host_surface) != 0) {
     g_printerr("Error: Failed to copy surface\n");
   }
 

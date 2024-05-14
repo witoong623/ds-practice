@@ -26,6 +26,7 @@ class Pipeline {
     GMainLoop *loop;
 
     GstElement *streammux;
+    GstElement *streammux_tee;
     GstElement *sink;
     GstElement *pgie;
     GstElement *tracker;

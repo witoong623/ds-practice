@@ -42,31 +42,27 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
 
   tiler = gst_element_factory_make ("nvmultistreamtiler", "nvtiler");
 
+  streammux_tee = gst_element_factory_make ("tee", "streammux-tee");
+
   nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
 
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
   sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
 
-  if (!pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink) {
+  if (!streammux_tee || !pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink) {
     auto err_msg = "One element could not be created. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
   }
 
   THROW_ON_PARSER_ERROR(nvds_parse_streammux(streammux, config_filepath,"streammux"));
-
   THROW_ON_PARSER_ERROR(nvds_parse_gie(pgie, config_filepath, "primary-gie"));
-
   THROW_ON_PARSER_ERROR(nvds_parse_tracker(tracker, config_filepath, "tracker"));
-
   // TODO: override batch-size of pgie if number of sources isn't equal batch-size
-
   THROW_ON_PARSER_ERROR(nvds_parse_osd(nvosd, config_filepath,"osd"));
-
   // TODO: calculate tiler column
   THROW_ON_PARSER_ERROR(nvds_parse_tiler(tiler, config_filepath, "tiler"));
-
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
   register_probs();
@@ -79,9 +75,10 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
     gst_bin_add (GST_BIN (pipeline), source);
   }
 
-  gst_bin_add_many (GST_BIN (pipeline), pgie, tracker, nvdslogger, tiler,
+  gst_bin_add_many (GST_BIN (pipeline), streammux, streammux_tee, pgie, tracker, nvdslogger, tiler,
     nvvidconv, nvosd, sink, NULL);
 
+  // link sources to streammux
   for (int i = 0; i < sources.size(); i++) {
     GstElement *source_bin = sources[i];
     GstPad *sinkpad, *srcpad;
@@ -111,8 +108,32 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
     gst_object_unref (sinkpad);
   }
 
-  if (!gst_element_link_many (streammux, pgie, tracker, nvdslogger, tiler,
-        nvvidconv, nvosd, sink, NULL)) {
+  // connect streammux, tee and pgie
+  // TODO: also with frame buffer related elements
+  if (!gst_element_link(streammux, streammux_tee)) {
+    auto err_msg = "Streammux and tee could not be linked. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+
+  GstPad *tee_pgie_src_pad = gst_element_request_pad_simple(streammux_tee, "src_%u");
+  GstPad *pgie_sink_pad = gst_element_get_static_pad(pgie, "sink");
+  if (!tee_pgie_src_pad || !pgie_sink_pad) {
+    auto err_msg = "Request pad from tee or PGIE failed. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+  if (gst_pad_link(tee_pgie_src_pad, pgie_sink_pad) != GST_PAD_LINK_OK) {
+    auto err_msg = "Tee and PGIE could not be linked. Exiting.\n";
+    g_printerr ("%s", err_msg);
+    throw std::runtime_error(err_msg);
+  }
+
+  gst_object_unref(tee_pgie_src_pad);
+  gst_object_unref(pgie_sink_pad);
+  
+  // link the rest of the pipeline
+  if (!gst_element_link_many(pgie, tracker, nvdslogger, tiler, nvvidconv, nvosd, sink, NULL)) {
     auto err_msg = "Elements could not be linked. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);

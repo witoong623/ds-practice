@@ -69,6 +69,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
   THROW_ON_PARSER_ERROR(nvds_parse_tiler(tiler, config_filepath, "tiler"));
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
+  g_object_set(G_OBJECT(buffer_nvvidconv), "nvbuf-memory-type", 1, nullptr);
+
   register_probs();
 
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -258,13 +260,13 @@ void Pipeline::register_probs() {
 
   gst_object_unref(tiler_sink_pad);
 
-  GstPad *pgie_sink_pad = gst_element_get_static_pad(pgie, "sink");
-  if (!pgie_sink_pad) {
-    g_print ("Unable to get pgie's sink pad\n");
+  GstPad *buffer_sink_pad = gst_element_get_static_pad(buffer_sink, "sink");
+  if (!buffer_sink_pad) {
+    g_print ("Unable to get buffer's sink pad\n");
   } else {
-    gst_pad_add_probe (pgie_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      frame_buffer_callback_nvinfer_prob, this, nullptr);
+    gst_pad_add_probe (buffer_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+      frame_buffer_callback_prob, this, nullptr);
   }
 
-  gst_object_unref(pgie_sink_pad);
+  gst_object_unref(buffer_sink_pad);
 }

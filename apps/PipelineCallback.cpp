@@ -5,6 +5,7 @@
 #include "gst-nvmessage.h"
 #include "gstnvdsmeta.h"
 #include "nvbufsurface.h"
+#include "opencv2/opencv.hpp"
 
 #include "Pipeline.h"
 
@@ -116,35 +117,18 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
   }
 
   NvBufSurface *surface = (NvBufSurface *)in_map_info.data;
-  NvBufSurface *host_surface;
 
-  NvBufSurfaceCreateParams create_params{};
-  create_params.width = surface->surfaceList[frame_meta->batch_id].width;
-  create_params.height = surface->surfaceList[frame_meta->batch_id].height;
-  create_params.colorFormat = surface->surfaceList[frame_meta->batch_id].colorFormat;
-  create_params.layout = NvBufSurfaceLayout::NVBUF_LAYOUT_BLOCK_LINEAR;
-  create_params.memType = NvBufSurfaceMemType::NVBUF_MEM_SYSTEM;
-
-  if (NvBufSurfaceCreate(&host_surface, surface->batchSize, &create_params) != 0) {
-    g_printerr("Error: Failed to create host surface\n");
+  if (NvBufSurfaceMap(surface, frame_meta->batch_id, -1, NVBUF_MAP_READ) != 0) {
+    g_printerr("Error: Failed to map surface\n");
   }
 
-  if (NvBufSurfaceCopy(surface, host_surface) != 0) {
-    g_printerr("Error: Failed to copy surface\n");
-  }
+  cv::Mat cv_frame = cv::Mat(surface->surfaceList[frame_meta->batch_id].height * 3 / 2,
+                             surface->surfaceList[frame_meta->batch_id].width,
+                             CV_8UC1,
+                             surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
+                             surface->surfaceList[frame_meta->batch_id].pitch);
 
-  g_print("GPU ID %d, batch size %d, numFilled %d, isContiguous %d, mem type %d \n",
-          host_surface->gpuId,
-          host_surface->batchSize,
-          host_surface->numFilled,
-          host_surface->isContiguous,
-          host_surface->memType);
-  g_print("is it null %d, data size %d, color format %d\n",
-          host_surface->surfaceList[frame_meta->batch_id].dataPtr == nullptr,
-          host_surface->surfaceList[frame_meta->batch_id].dataSize,
-          host_surface->surfaceList[frame_meta->batch_id].colorFormat);
-
-  NvBufSurfaceDestroy(host_surface);
+  NvBufSurfaceUnMap(surface, frame_meta->batch_id, -1);
   gst_buffer_unmap(buf, &in_map_info);
 
   return GST_PAD_PROBE_OK;

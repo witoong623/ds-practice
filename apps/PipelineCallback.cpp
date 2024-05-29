@@ -7,6 +7,7 @@
 #include "nvbufsurface.h"
 #include "opencv2/opencv.hpp"
 
+#include "FrameBuffer.h"
 #include "Pipeline.h"
 
 
@@ -122,11 +123,14 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
     g_printerr("Error: Failed to map surface\n");
   }
 
+  // neeed CV_YUV2BGRA_NV12 to convert to BGRA
   cv::Mat cv_frame = cv::Mat(surface->surfaceList[frame_meta->batch_id].height * 3 / 2,
                              surface->surfaceList[frame_meta->batch_id].width,
                              CV_8UC1,
                              surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
                              surface->surfaceList[frame_meta->batch_id].pitch);
+
+  pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num, cv_frame.clone());
 
   NvBufSurfaceUnMap(surface, frame_meta->batch_id, -1);
   gst_buffer_unmap(buf, &in_map_info);

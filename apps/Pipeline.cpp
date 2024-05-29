@@ -20,7 +20,9 @@
     throw std::runtime_error(err_msg); \
   }
 
-Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop) {
+constexpr int MAX_FRAME_BUFFER_SIZE = 100;
+
+Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_buffer(MAX_FRAME_BUFFER_SIZE) {
   pipeline = gst_pipeline_new ("ds-practice-pipeline");
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
 

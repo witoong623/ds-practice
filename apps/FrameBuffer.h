@@ -6,12 +6,15 @@
 #include "opencv2/opencv.hpp"
 
 
+typedef std::unordered_map<unsigned int, std::unordered_map<int, cv::Mat>> SourceBufferFrames;
+
 class FrameBuffer {
   public:
     explicit FrameBuffer(int num_frames);
-    ~FrameBuffer();
 
-    void buffer_frame(void *data, int size);
+    void buffer_frame(unsigned int source_id, int frame_num, cv::Mat frame);
   private:
-    std::unordered_map<int, std::vector<cv::Mat>> source_buffer_frames;
+    int num_frames;
+    std::unordered_map<unsigned int, int> source_latest_frame_number;
+    SourceBufferFrames source_buffer_frames;
 };

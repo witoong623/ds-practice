@@ -20,7 +20,7 @@
     throw std::runtime_error(err_msg); \
   }
 
-constexpr int MAX_FRAME_BUFFER_SIZE = 100;
+constexpr int MAX_FRAME_BUFFER_SIZE = 300;
 
 Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_buffer(MAX_FRAME_BUFFER_SIZE) {
   pipeline = gst_pipeline_new ("ds-practice-pipeline");
@@ -215,13 +215,13 @@ void Pipeline::register_probs() {
 
   gst_object_unref(tiler_sink_pad);
 
-  GstPad *buffer_sink_pad = gst_element_get_static_pad(buffer_sink, "sink");
-  if (!buffer_sink_pad) {
-    g_print ("Unable to get buffer's sink pad\n");
+  GstPad *vidconv_src_pad = gst_element_get_static_pad(nvvidconv, "src");
+  if (!vidconv_src_pad) {
+    g_print ("Unable to get vidconv's src pad\n");
   } else {
-    gst_pad_add_probe (buffer_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+    gst_pad_add_probe (vidconv_src_pad, GST_PAD_PROBE_TYPE_BUFFER,
       frame_buffer_callback_prob, this, nullptr);
   }
 
-  gst_object_unref(buffer_sink_pad);
+  gst_object_unref(vidconv_src_pad);
 }

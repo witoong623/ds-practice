@@ -27,16 +27,14 @@ class Pipeline {
     GMainLoop *loop;
 
     GstElement *streammux;
-    GstElement *streammux_tee;
     GstElement *sink;
     GstElement *pgie;
     GstElement *tracker;
     GstElement *nvvidconv;
-    GstElement *buffer_nvvidconv;
-    GstElement *buffer_sink;
     GstElement *nvosd;
     GstElement *tiler;
     GstElement *nvdslogger;
+    GstElement *nv12_filter;
 
     Analytic _analytic;
     FrameBuffer _frame_buffer;

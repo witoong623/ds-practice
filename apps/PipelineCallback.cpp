@@ -123,6 +123,7 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
     g_printerr("Error: Failed to map surface\n");
   }
 
+  // data size 3317760, color 33, pitch 2048
   // neeed CV_YUV2BGRA_NV12 to convert to BGRA
   cv::Mat cv_frame = cv::Mat(surface->surfaceList[frame_meta->batch_id].height * 3 / 2,
                              surface->surfaceList[frame_meta->batch_id].width,

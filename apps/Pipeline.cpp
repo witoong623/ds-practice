@@ -44,19 +44,15 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_
 
   tiler = gst_element_factory_make ("nvmultistreamtiler", "nvtiler");
 
-  streammux_tee = gst_element_factory_make ("tee", "streammux-tee");
-
   nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
-
-  buffer_nvvidconv = gst_element_factory_make ("nvvideoconvert", "buffer-converter");
 
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
   sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
 
-  buffer_sink = gst_element_factory_make ("fakesink", "buffer-sink");
+  nv12_filter = gst_element_factory_make ("capsfilter", "nv12-filter");
 
-  if (!streammux_tee || !pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink) {
+  if (!pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink) {
     auto err_msg = "One element could not be created. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
@@ -71,7 +67,11 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_
   THROW_ON_PARSER_ERROR(nvds_parse_tiler(tiler, config_filepath, "tiler"));
   THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
-  g_object_set(G_OBJECT(buffer_nvvidconv), "nvbuf-memory-type", 1, nullptr);
+  g_object_set(G_OBJECT(nvvidconv), "nvbuf-memory-type", 3, nullptr);
+
+  GstCaps *nv12_caps = gst_caps_from_string("video/x-raw(memory:NVMM), format=NV12");
+  g_object_set(G_OBJECT(nv12_filter), "caps", nv12_caps, nullptr);
+  gst_caps_unref(nv12_caps);
 
   register_probs();
 
@@ -83,8 +83,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_
     gst_bin_add (GST_BIN (pipeline), source);
   }
 
-  gst_bin_add_many (GST_BIN (pipeline), streammux, streammux_tee, pgie, tracker, nvdslogger, tiler,
-    nvvidconv, nvosd, sink, buffer_nvvidconv, buffer_sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), streammux, pgie, tracker, nvdslogger, tiler,
+    nvvidconv, nvosd, sink, nv12_filter, NULL);
 
   // link sources to streammux
   for (int i = 0; i < sources.size(); i++) {
@@ -116,56 +116,9 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_
     gst_object_unref (sinkpad);
   }
 
-  // connect streammux, tee and pgie
-  // TODO: also with frame buffer related elements
-  if (!gst_element_link(streammux, streammux_tee)) {
-    auto err_msg = "Streammux and tee could not be linked. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-
-  GstPad *tee_pgie_src_pad = gst_element_request_pad_simple(streammux_tee, "src_%u");
-  GstPad *pgie_sink_pad = gst_element_get_static_pad(pgie, "sink");
-  if (!tee_pgie_src_pad || !pgie_sink_pad) {
-    auto err_msg = "Request pad from tee or PGIE failed. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-  if (gst_pad_link(tee_pgie_src_pad, pgie_sink_pad) != GST_PAD_LINK_OK) {
-    auto err_msg = "Tee and PGIE could not be linked. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-
-  gst_object_unref(tee_pgie_src_pad);
-  gst_object_unref(pgie_sink_pad);
-
-  GstPad *tee_buf_conv_src_pad = gst_element_request_pad_simple(streammux_tee, "src_%u");
-  GstPad *buf_conv_sink_pad = gst_element_get_static_pad(buffer_nvvidconv, "sink");
-  if (!tee_buf_conv_src_pad || !buf_conv_sink_pad) {
-    auto err_msg = "Request pad from tee or buffer converter failed. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-
-  if (gst_pad_link(tee_buf_conv_src_pad, buf_conv_sink_pad) != GST_PAD_LINK_OK) {
-    auto err_msg = "Tee and buffer converter could not be linked. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-
-  gst_object_unref(tee_buf_conv_src_pad);
-  gst_object_unref(buf_conv_sink_pad);
-
   // link the rest of the pipeline
-  if (!gst_element_link_many(pgie, tracker, nvdslogger, tiler, nvvidconv, nvosd, sink, NULL)) {
+  if (!gst_element_link_many(streammux, pgie, tracker, nvdslogger, nvvidconv, nv12_filter, tiler, nvosd, sink, NULL)) {
     auto err_msg = "Elements could not be linked. Exiting.\n";
-    g_printerr ("%s", err_msg);
-    throw std::runtime_error(err_msg);
-  }
-
-  if (!gst_element_link_many(buffer_nvvidconv, buffer_sink, NULL)) {
-    auto err_msg = "Buffer elements could not be linked. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
   }

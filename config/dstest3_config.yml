@@ -41,10 +41,11 @@ tracker:
   ll-config-file: /opt/nvidia/deepstream/deepstream-6.4/samples/configs/deepstream-app/config_tracker_NvDCF_perf.yml
 
 osd:
-  process-mode: 0
+  process-mode: 1
   display-text: 1
 
 tiler:
+  nvbuf-memory-type: 3
   width: 1920
   height: 1080
 

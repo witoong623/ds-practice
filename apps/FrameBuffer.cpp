@@ -25,3 +25,24 @@ void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat fr
   frames_buffer.insert({frame_num, frame});
   source_latest_frame_number[source_id] = frame_num;
 }
+
+ReturnFrameResult FrameBuffer::get_frames(unsigned int source_id, int frame_num,
+                                          int num_frames, std::vector<cv::Mat> & frames) {
+  if (source_buffer_frames.find(source_id) != source_buffer_frames.end()) {
+    std::unordered_map<int, cv::Mat> &frames_buffer = source_buffer_frames[source_id];
+
+    for (int i = frame_num; i < frame_num + num_frames; i++) {
+      if (frames_buffer.find(i) != frames_buffer.end()) {
+        frames.push_back(frames_buffer[i]);
+      } else {
+        if (frames.size() > 0) {
+          return ReturnFrameResult::RETURN_PARTIAL;
+        } else {
+          return ReturnFrameResult::NOT_FOUND;
+        }
+      }
+    }
+    return ReturnFrameResult::RETURN_ALL;
+  }
+  return ReturnFrameResult::NOT_FOUND;
+}

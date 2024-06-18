@@ -6,6 +6,7 @@
 #include <glib.h>
 #include "gstnvdsmeta.h"
 
+#include "FrameBuffer.h"
 #include "MovementAnalyzer.h"
 
 
@@ -31,7 +32,7 @@ struct LineCrossing {
 
 class Analytic {
   public:
-    Analytic();
+    Analytic(FrameBuffer *frame_buffer);
 
     // update all states of analytics using object in current frame
     void update_analytic_state(NvDsBatchMeta *batch_meta);
@@ -41,6 +42,7 @@ class Analytic {
     void remove_stale_object_history(gint current_frame);
     void update_line_crossing_analysis(gint current_frame);
 
+    FrameBuffer *frame_buffer;
     SourceAnalyticInfoMap source_analytic_infos;
 
     // source_id -> line crossing check info

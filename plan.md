@@ -25,4 +25,5 @@ On Tiler's sink, I got the following numbers.
 
 ## FPS
 Video at 30 FPS (human and bus video), live-source = 0.
-- 24.98: Not using frame buffer at all. No probe attach.
+- 470: Not using frame buffer at all. No probe attach.
+- 155-165: Use OpenCV Mat for buffer.

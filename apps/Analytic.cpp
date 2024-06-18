@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <vector>
 
 #include "gstnvdsmeta.h"
+#include <opencv2/opencv.hpp>
 
+#include "FrameBuffer.h"
 #include "Geometry.h"
 #include "MovementAnalyzer.h"
 
@@ -12,7 +15,7 @@ constexpr gint STALE_OBJECT_THRESHOLD = 250;
 constexpr guint FIRST_SOURCE = 0;
 constexpr guint MAX_DISPLAY_LEN = 64;
 
-Analytic::Analytic() {
+Analytic::Analytic(FrameBuffer *frame_buffer): frame_buffer(frame_buffer) {
   // TODO: create line from configuration
   Line line {Point(100, 440), Point(1800, 440)};
   // create LineCrossing
@@ -131,10 +134,25 @@ void Analytic::update_line_crossing_analysis(gint current_frame) {
         auto find_ret = std::find(analytic_info.count_directions.begin(),
                                   analytic_info.count_directions.end(),
                                   direction);
-        if (find_ret != analytic_info.count_directions.end()) {
-          analytic_info.crossing_direction_counts[direction]++;
+        if (find_ret == analytic_info.count_directions.end()) {
+          continue;
         }
-        // TODO: alert about this object crossing the line
+
+        analytic_info.crossing_direction_counts[direction]++;
+
+        std::vector<cv::Mat> video_frames;
+        auto get_frame_ret = frame_buffer->get_frames(source_id, object_history->last_update_frame, 100, video_frames);
+
+        char filename[16];
+        std::sprintf(filename, "test-%lu.mp4", object_id);
+        cv::VideoWriter video_writer {filename, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), 25, cv::Size(1920, 1080)};
+
+        for (auto& frame : video_frames) {
+          cv::Mat bgr_mat;
+          cv::cvtColor(frame, bgr_mat, cv::COLOR_YUV2BGR_NV12);
+          video_writer.write(bgr_mat);
+        }
+        video_writer.release();
       }
     }
   }

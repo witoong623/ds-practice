@@ -22,7 +22,8 @@
 
 constexpr int MAX_FRAME_BUFFER_SIZE = 300;
 
-Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop), _frame_buffer(MAX_FRAME_BUFFER_SIZE) {
+Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
+  _frame_buffer(MAX_FRAME_BUFFER_SIZE), _analytic(&_frame_buffer) {
   pipeline = gst_pipeline_new ("ds-practice-pipeline");
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
 

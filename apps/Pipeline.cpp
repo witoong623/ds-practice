@@ -49,7 +49,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
 
   nvosd = gst_element_factory_make ("nvdsosd", "nv-onscreendisplay");
 
-  sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
+  // sink = gst_element_factory_make ("nveglglessink", "nvvideo-renderer");
+  sink = gst_element_factory_make ("fakesink", "fake-renderer");
 
   nv12_filter = gst_element_factory_make ("capsfilter", "nv12-filter");
 
@@ -66,7 +67,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   THROW_ON_PARSER_ERROR(nvds_parse_osd(nvosd, config_filepath,"osd"));
   // TODO: calculate tiler column
   THROW_ON_PARSER_ERROR(nvds_parse_tiler(tiler, config_filepath, "tiler"));
-  THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
+  // THROW_ON_PARSER_ERROR(nvds_parse_egl_sink(sink, config_filepath, "sink"));
 
   g_object_set(G_OBJECT(nvvidconv), "nvbuf-memory-type", 3, nullptr);
 

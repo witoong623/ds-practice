@@ -17,3 +17,11 @@ These are values I got from NvBufSurface and how I create OpenCV in YUV image fr
   - Number of V: 2,073,600 / 4 = 518,400
   - Total number of pixels/bytes: 2,073,600 + (518,400 * 2) = 3,110,400
 
+- [Pitch is the number of bytes per row on screen](https://jsandler18.github.io/extra/framebuffer.html)
+  - Each row has 1920 pixels, so we already have 1920 bytes.
+  - We can think of each pixel share 2 bits of U and 2 bits of V, So 4 bits per pixel for color.
+  - 1920 * 4 bits = 7,680 bits / 8 bits = 960 bytes.
+  - 1920 + 960
+
+## Number of frame what we can buffer
+In practice, each image is 3.3 MB. If we buffer at 15 FPS, 10 second is 150 frames * 3.3 = 495 MB.

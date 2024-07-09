@@ -5,7 +5,7 @@
 #include "opencv2/opencv.hpp"
 
 
-FrameBuffer::FrameBuffer(int num_frames): num_frames(num_frames) {}
+FrameBuffer::FrameBuffer(int num_frames, bool enable): num_frames(num_frames), enable(enable) {}
 
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat frame) {
   int latest_frame_number = -1;

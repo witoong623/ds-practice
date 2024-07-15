@@ -15,6 +15,8 @@ enum class MemoryType {
 
 class MemoryBuffer {
   public:
+    // empty memory buffer
+    explicit MemoryBuffer();
     explicit MemoryBuffer(unsigned int width, unsigned int height, MemoryType frame_type);
     ~MemoryBuffer();
 
@@ -25,8 +27,8 @@ class MemoryBuffer {
     MemoryBuffer& operator=(const MemoryBuffer& other) = delete;
     MemoryBuffer& operator=(MemoryBuffer&&) = delete;
 
-    [[nodiscard]] inline cv::Mat get_memory();
-    [[nodiscard]] inline int *get_ref_count() const;
+    [[nodiscard]] inline cv::Mat get_memory() { return memory; }
+    [[nodiscard]] inline int *get_ref_count() const { return ref_count; }
   private:
     cv::Mat memory;
     int *ref_count = nullptr;

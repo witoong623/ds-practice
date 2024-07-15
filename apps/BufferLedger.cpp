@@ -3,6 +3,8 @@
 #include "opencv2/opencv.hpp"
 
 
+MemoryBuffer::MemoryBuffer(): ref_count(nullptr) {}
+
 MemoryBuffer::MemoryBuffer(unsigned int width, unsigned int height,
                            MemoryType frame_type):
                            ref_count(new int(0)) {
@@ -35,15 +37,18 @@ MemoryBuffer::MemoryBuffer(const MemoryBuffer& other) {
   }
 }
 
-cv::Mat MemoryBuffer::get_memory() { return memory; }
-int *MemoryBuffer::get_ref_count() const { return ref_count; }
-
 
 BufferLedger::BufferLedger(int num_buffers, unsigned int width, unsigned int height, MemoryType frame_type):
                            width(width), height(height), frame_type(frame_type) {
   ledger.reserve(num_buffers);
   for (int i = 0; i < num_buffers; i++) {
     ledger.emplace_back(width, height, frame_type);
+  }
+}
+
+BufferLedger::~BufferLedger() {
+  for (auto &buffer : ledger) {
+    delete buffer.get_ref_count();
   }
 }
 

@@ -4,8 +4,11 @@
 
 #include "opencv2/opencv.hpp"
 
+#include "BufferLedger.h"
 
-FrameBuffer::FrameBuffer(int num_frames, bool enable): num_frames(num_frames), enable(enable) {}
+
+FrameBuffer::FrameBuffer(int num_frames, bool enable): 
+    num_frames(num_frames), enable(enable), buffer_ledger(num_frames, 1920, 1080 * 3 / 2, MemoryType::NV12) {}
 
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat frame) {
   int latest_frame_number = -1;
@@ -13,7 +16,7 @@ void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat fr
     latest_frame_number = source_latest_frame_number[source_id];
   }
 
-  std::unordered_map<int, cv::Mat> &frames_buffer = source_buffer_frames[source_id];
+  std::unordered_map<int, MemoryBuffer> &frames_buffer = source_buffer_frames[source_id];
 
   // remove oldest frame if buffer is full
   if (frames_buffer.size() == num_frames) {
@@ -22,14 +25,17 @@ void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat fr
     frames_buffer.erase(oldest_frame_number);
   }
 
-  frames_buffer.insert({frame_num, frame});
+  MemoryBuffer buffer = buffer_ledger.get_empty_buffer();
+  frame.copyTo(buffer.get_memory());
+
+  frames_buffer.insert({frame_num, buffer});
   source_latest_frame_number[source_id] = frame_num;
 }
 
 ReturnFrameResult FrameBuffer::get_frames(unsigned int source_id, int frame_num,
-                                          int num_frames, std::vector<cv::Mat> & frames) {
+                                          int num_frames, std::vector<MemoryBuffer> & frames) {
   if (source_buffer_frames.find(source_id) != source_buffer_frames.end()) {
-    std::unordered_map<int, cv::Mat> &frames_buffer = source_buffer_frames[source_id];
+    std::unordered_map<int, MemoryBuffer> &frames_buffer = source_buffer_frames[source_id];
 
     for (int i = frame_num - num_frames; i < frame_num; i++) {
       if (frames_buffer.find(i) != frames_buffer.end()) {

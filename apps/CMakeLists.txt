@@ -1,5 +1,6 @@
 add_executable(ds-practice
   Analytic.cpp
+  BufferLedger.cpp
   FrameBuffer.cpp
   Geometry.cpp
   main.cpp

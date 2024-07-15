@@ -125,6 +125,8 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
 
   // data size 3317760, color 33, pitch 2048
   // neeed CV_YUV2BGRA_NV12 to convert to BGRA
+  // element size: 1, element without channel 1, total 3110400
+  // cols: 1920, rows: 1620, step size 1920, 1 (appear to be rows major)
   cv::Mat cv_frame = cv::Mat(surface->surfaceList[frame_meta->batch_id].height * 3 / 2,
                              surface->surfaceList[frame_meta->batch_id].width,
                              CV_8UC1,

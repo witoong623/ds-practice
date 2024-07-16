@@ -60,5 +60,5 @@ MemoryBuffer BufferLedger::get_empty_buffer() {
   }
 
   // TODO: warning message about use more than allocated buffers
-  return MemoryBuffer(width, height, frame_type);
+  return ledger.emplace_back(width, height, frame_type);
 }

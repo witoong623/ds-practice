@@ -27,7 +27,7 @@ class MemoryBuffer {
     MemoryBuffer& operator=(const MemoryBuffer& other) = delete;
     MemoryBuffer& operator=(MemoryBuffer&&) = delete;
 
-    [[nodiscard]] inline cv::Mat get_memory() { return memory; }
+    [[nodiscard]] inline cv::Mat &get_memory() { return memory; }
     [[nodiscard]] inline int *get_ref_count() const { return ref_count; }
   private:
     cv::Mat memory;

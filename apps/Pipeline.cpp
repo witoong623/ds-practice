@@ -54,6 +54,8 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   THROW_ON_PARSER_ERROR(nvds_parse_streammux(streammux, config_filepath,"streammux"));
   THROW_ON_PARSER_ERROR(nvds_parse_gie(pgie, config_filepath, "primary-gie"));
   THROW_ON_PARSER_ERROR(nvds_parse_tracker(tracker, config_filepath, "tracker"));
+  // overwrite streammux batch size to equal to number of sources
+  g_object_set(G_OBJECT(streammux), "batch-size", sources.size(), nullptr);
 
   g_object_set(G_OBJECT(nvvidconv), "nvbuf-memory-type", 3, nullptr);
   GstCaps *nv12_caps = gst_caps_from_string("video/x-raw(memory:NVMM), format=NV12");

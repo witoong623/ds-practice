@@ -48,7 +48,10 @@ BufferLedger::BufferLedger(int num_buffers, unsigned int width, unsigned int hei
 
 BufferLedger::~BufferLedger() {
   for (auto &buffer : ledger) {
-    delete buffer.get_ref_count();
+    auto *ref_count = buffer.get_ref_count();
+    if (ref_count != nullptr) {
+      delete ref_count;
+    }
   }
 }
 

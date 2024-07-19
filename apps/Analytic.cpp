@@ -141,19 +141,19 @@ void Analytic::update_line_crossing_analysis(gint current_frame) {
 
         analytic_info.crossing_direction_counts[direction]++;
 
-        std::vector<MemoryBuffer> video_frames;
-        auto get_frame_ret = frame_buffer->get_frames(source_id, object_history->last_update_frame, 100, video_frames);
+        // std::vector<MemoryBuffer> video_frames;
+        // auto get_frame_ret = frame_buffer->get_frames(source_id, object_history->last_update_frame, 100, video_frames);
 
-        char filename[16];
-        std::sprintf(filename, "test-%lu.mp4", object_id);
-        cv::VideoWriter video_writer {filename, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), 25, cv::Size(1920, 1080)};
+        // char filename[16];
+        // std::sprintf(filename, "test-%lu.mp4", object_id);
+        // cv::VideoWriter video_writer {filename, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), 25, cv::Size(1920, 1080)};
 
-        for (MemoryBuffer& frame : video_frames) {
-          cv::Mat bgr_mat;
-          cv::cvtColor(frame.get_memory(), bgr_mat, cv::COLOR_YUV2BGR_NV12);
-          video_writer.write(bgr_mat);
-        }
-        video_writer.release();
+        // for (MemoryBuffer& frame : video_frames) {
+        //   cv::Mat bgr_mat;
+        //   cv::cvtColor(frame.get_memory(), bgr_mat, cv::COLOR_YUV2BGR_NV12);
+        //   video_writer.write(bgr_mat);
+        // }
+        // video_writer.release();
       }
     }
   }

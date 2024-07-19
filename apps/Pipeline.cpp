@@ -60,7 +60,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   g_object_set(G_OBJECT(nv12_filter), "caps", nv12_caps, nullptr);
   gst_caps_unref(nv12_caps);
 
-  // register_probs();
+  register_probs();
 
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   bus_watch_id = gst_bus_add_watch (bus, pipeline_bus_watch, loop);
@@ -282,13 +282,12 @@ void Pipeline::register_probs() {
 
   gst_object_unref(tiler_sink_pad);
 
-  GstPad *vidconv_src_pad = gst_element_get_static_pad(nvvidconv, "src");
-  if (!vidconv_src_pad) {
-    g_print ("Unable to get vidconv's src pad\n");
+  GstPad *buf_fakesink_sink_pad = gst_element_get_static_pad(buf_fakesink, "sink");
+  if (!buf_fakesink_sink_pad) {
+    g_print ("Unable to get fakesink's sink pad\n");
   } else {
-    gst_pad_add_probe (vidconv_src_pad, GST_PAD_PROBE_TYPE_BUFFER,
+    gst_pad_add_probe (buf_fakesink_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
       frame_buffer_callback_prob, this, nullptr);
   }
-
-  gst_object_unref(vidconv_src_pad);
+  gst_object_unref(buf_fakesink_sink_pad);
 }

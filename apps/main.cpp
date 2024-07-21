@@ -21,10 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdexcept>
+
 #include <gst/gst.h>
 #include <glib.h>
-
-#include <stdexcept>
 
 #include "Pipeline.h"
 

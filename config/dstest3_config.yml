@@ -29,7 +29,7 @@ source-list:
 streammux:
   batch-size: 1
   live-source: 0
-  batched-push-timeout: 40000
+  batched-push-timeout: 33334
   width: 1920
   height: 1080
 

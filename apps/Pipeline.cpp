@@ -176,7 +176,7 @@ GstElement *Pipeline::create_source_bin(guint index, gchar *uri) {
   /* Source element for reading from the uri.
    * We will use decodebin and let it figure out the container format of the
    * stream and the codec and plug the appropriate demux and decode plugins. */
-  uri_decode_bin = gst_element_factory_make ("uridecodebin", "uri-decode-bin");
+  uri_decode_bin = gst_element_factory_make ("nvurisrcbin", "uri-decode-bin");
 
   if (!bin || !uri_decode_bin) {
     g_printerr ("One element in source bin could not be created.\n");

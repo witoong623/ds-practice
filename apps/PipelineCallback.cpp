@@ -110,17 +110,16 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
   NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta (buf);
   NvDsFrameMetaList *frame_meta_l = nullptr;
 
+  GstMapInfo in_map_info;
+  if (!gst_buffer_map (buf, &in_map_info, GST_MAP_READ)) {
+    g_printerr ("Error: Failed to map gst buffer\n");
+    gst_buffer_unmap (buf, &in_map_info);
+    return GST_PAD_PROBE_OK;
+  }
+  NvBufSurface *surface = (NvBufSurface *)in_map_info.data;
+
   for (frame_meta_l = batch_meta->frame_meta_list; frame_meta_l != nullptr; frame_meta_l = frame_meta_l->next) {
     NvDsFrameMeta *frame_meta = (NvDsFrameMeta *)frame_meta_l->data;
-
-    GstMapInfo in_map_info;
-    if (!gst_buffer_map (buf, &in_map_info, GST_MAP_READ)) {
-      g_printerr ("Error: Failed to map gst buffer\n");
-      gst_buffer_unmap (buf, &in_map_info);
-      return GST_PAD_PROBE_OK;
-    }
-
-    NvBufSurface *surface = (NvBufSurface *)in_map_info.data;
 
     if (NvBufSurfaceMap(surface, frame_meta->batch_id, -1, NVBUF_MAP_READ) != 0) {
       g_printerr("Error: Failed to map surface\n");
@@ -139,8 +138,9 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
     pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num, cv_frame.clone());
 
     NvBufSurfaceUnMap(surface, frame_meta->batch_id, -1);
-    gst_buffer_unmap(buf, &in_map_info);
   }
+
+  gst_buffer_unmap(buf, &in_map_info);
 
   return GST_PAD_PROBE_OK;
 }

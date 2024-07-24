@@ -135,7 +135,9 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
                               surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
                               surface->surfaceList[frame_meta->batch_id].pitch);
 
-    pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num, cv_frame.clone());
+    pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num,
+                                          surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
+                                          surface->surfaceList[frame_meta->batch_id].dataSize);
 
     NvBufSurfaceUnMap(surface, frame_meta->batch_id, -1);
   }

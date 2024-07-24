@@ -3,3 +3,4 @@ build-debug/
 build-release/
 videos/
 dot-files/
+test-*.jpg

@@ -11,7 +11,7 @@
 FrameBuffer::FrameBuffer(int num_frames, bool enable): 
     num_frames(num_frames), enable(enable), buffer_ledger(num_frames, 1920, 1080, MemoryType::NV12) {}
 
-void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat frame) {
+void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size) {
   int latest_frame_number = -1;
   if (source_latest_frame_number.find(source_id) != source_latest_frame_number.end()) {
     latest_frame_number = source_latest_frame_number[source_id];
@@ -27,7 +27,7 @@ void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, cv::Mat fr
   }
 
   MemoryBuffer buffer = buffer_ledger.get_empty_buffer();
-  frame.copyTo(buffer.get_memory());
+  buffer.replace_data(data, size);
 
   frames_buffer.insert({frame_num, buffer});
   source_latest_frame_number[source_id] = frame_num;

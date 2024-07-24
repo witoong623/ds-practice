@@ -21,7 +21,7 @@ class FrameBuffer {
     explicit FrameBuffer(int num_frames, bool enable = true);
 
     // frame is data from pipeline, need to copy it
-    void buffer_frame(unsigned int source_id, int frame_num, cv::Mat frame);
+    void buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size);
 
     ReturnFrameResult get_frames(unsigned int source_id, int frame_num,
                                  int num_frames, std::vector<MemoryBuffer> & frames);

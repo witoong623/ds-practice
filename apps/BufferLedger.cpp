@@ -68,7 +68,7 @@ BufferLedger::BufferLedger(
   auto data_ptr = memory_pool;
 
   for (int i = 0; i < num_buffers; i++) {
-    ledger.emplace_back(width, height, type, data_ptr, NV12_GPU_BUFFER_SIZE, step);
+    ledger.emplace_back(this->width, this->height, type, data_ptr, NV12_GPU_BUFFER_SIZE, step);
     data_ptr = static_cast<unsigned char*>(data_ptr) + NV12_GPU_BUFFER_SIZE;
   }
 }

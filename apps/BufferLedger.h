@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <vector>
 #include <unordered_map>
 
@@ -31,11 +32,11 @@ class MemoryBuffer {
     void replace_data(void *data, std::size_t size);
 
     [[nodiscard]] inline cv::Mat &get_mat_view() { return mat_view; }
-    [[nodiscard]] inline int *get_ref_count() const { return ref_count; }
+    [[nodiscard]] inline std::atomic_int *get_ref_count() const { return ref_count; }
     [[nodiscard]] inline void *get_data() const { return data; }
   private:
     void *data = nullptr;
-    int *ref_count = nullptr;
+    std::atomic_int *ref_count = nullptr;
     cv::Mat mat_view;
 };
 

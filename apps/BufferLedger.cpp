@@ -1,5 +1,6 @@
 #include "BufferLedger.h"
 
+#include <atomic>
 #include <cstdlib>
 #include <iostream>
 
@@ -12,13 +13,19 @@ MemoryBuffer::MemoryBuffer(): ref_count(nullptr) {}
 MemoryBuffer::MemoryBuffer(
     int width, int height, int type,
     void *data, std::size_t size, std::size_t step):
-    data(data), ref_count(new int(0)),
+    data(data), ref_count(new std::atomic_int(0)),
     mat_view(height, width, type, data, step) {}
 
 MemoryBuffer::~MemoryBuffer() {
   if (ref_count != nullptr) {
-    if (*ref_count > 0) {
-      (*ref_count)--;
+    // https://stackoverflow.com/questions/13949914/c-increment-stdatomic-int-if-nonzero
+    // decrease ref count by 1 if it is more than 0
+    int previous = ref_count->load();
+    for (;;) {
+      if (previous == 0)
+          break;
+      if (ref_count->compare_exchange_weak(previous, previous - 1))
+          break;
     }
   }
 }
@@ -28,7 +35,7 @@ MemoryBuffer::MemoryBuffer(const MemoryBuffer& other) {
   ref_count = other.ref_count;
   mat_view = other.mat_view;
   if (ref_count != nullptr) {
-    (*ref_count)++;
+    ref_count->fetch_add(1);
   }
 }
 
@@ -84,7 +91,8 @@ BufferLedger::~BufferLedger() {
 
 MemoryBuffer BufferLedger::get_empty_buffer() {
   for (auto &buffer : ledger) {
-    if (*buffer.get_ref_count() == 0) {
+    auto val = buffer.get_ref_count()->load();
+    if (val == 0) {
       return buffer;
     }
   }

@@ -20,6 +20,7 @@ class FrameBuffer {
   public:
     explicit FrameBuffer(int num_frames, bool enable = true);
 
+    // TODO: protect buffer and get function with mutex
     // frame is data from pipeline, need to copy it
     void buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size);
 

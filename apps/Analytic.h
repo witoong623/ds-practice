@@ -8,6 +8,7 @@
 
 #include "FrameBuffer.h"
 #include "MovementAnalyzer.h"
+#include "ThreadPool.h"
 
 
 struct SourceAnalyticInfo {
@@ -32,7 +33,7 @@ struct LineCrossing {
 
 class Analytic {
   public:
-    Analytic(FrameBuffer *frame_buffer);
+    Analytic(FrameBuffer *frame_buffer, ThreadPool *thread_pool);
 
     // update all states of analytics using object in current frame
     void update_analytic_state(NvDsBatchMeta *batch_meta);
@@ -43,6 +44,7 @@ class Analytic {
     void update_line_crossing_analysis(gint current_frame);
 
     FrameBuffer *frame_buffer;
+    ThreadPool *thread_pool;
     SourceAnalyticInfoMap source_analytic_infos;
 
     // source_id -> line crossing check info

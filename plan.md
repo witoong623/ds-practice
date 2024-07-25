@@ -26,7 +26,21 @@ On Tiler's sink, I got the following numbers.
 ## FPS
 Video at 30 FPS (human and bus video), live-source = 0.
 - 470: Not using frame buffer at all. No probe attach.
+- 470: Not using frame buffer at all. No probe attach. Early branching.
+- 220: Use branching for buffer
+- 232: Use early branching for buffer
 - 155-165: Use OpenCV Mat for buffer.
+
+3 videos at 30 FPS (human and bus video), live-source = 0.
+- 243: Not using frame buffer at all. No probe attach.
+- 236: Not using frame buffer at all. No probe attach. Early branching.
+- 95: Use branching for buffer
+
+4 videos at 30 FPS (human and bus video), live-source = 0.
+- 182: Not using frame buffer at all. No probe attach.
+- 180: Not using frame buffer at all. No probe attach. Early branching.
+- 67-70: Use branching for buffer
+
 Video 4K at 25 FPS (highway vehicle counting video), live-source = 0
 - 210: Not using frame buffer at all. No probe attach.
 - 134-145: Use OpenCV Mat for buffer.

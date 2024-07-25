@@ -7,6 +7,8 @@
 
 #include "Analytic.h"
 #include "FrameBuffer.h"
+#include "ThreadPool.h"
+
 
 class Pipeline {
   public:
@@ -18,6 +20,7 @@ class Pipeline {
     GstElement *pipeline;
     inline Analytic &analytic() { return _analytic; }
     inline FrameBuffer &frame_buffer() { return _frame_buffer; }
+    inline ThreadPool &thread_pool() { return _thread_pool; }
   private:
     std::vector<GstElement *> create_sources(gchar *config_filepath);
     GstElement *create_source_bin (guint index, gchar *uri);
@@ -48,7 +51,8 @@ class Pipeline {
     GstElement *buf_queue;
     GstElement *buffering_bin;
 
-    Analytic _analytic;
+    ThreadPool _thread_pool {2};
     FrameBuffer _frame_buffer;
+    Analytic _analytic;
     std::vector<GstElement *> sources;
 };

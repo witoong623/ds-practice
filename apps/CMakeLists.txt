@@ -7,6 +7,7 @@ add_executable(ds-practice
   MovementAnalyzer.cpp
   Pipeline.cpp
   PipelineCallback.cpp
+  ThreadPool.cpp
 )
 
 find_package(PkgConfig REQUIRED)

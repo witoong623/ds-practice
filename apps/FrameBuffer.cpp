@@ -1,5 +1,6 @@
 #include "FrameBuffer.h"
 
+#include <mutex>
 #include <unordered_map>
 
 #include "opencv2/opencv.hpp"
@@ -12,6 +13,8 @@ FrameBuffer::FrameBuffer(int num_frames, bool enable):
     num_frames(num_frames), enable(enable), buffer_ledger(num_frames, 1920, 1080, MemoryType::NV12) {}
 
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size) {
+  std::scoped_lock lock(guard);
+
   int latest_frame_number = -1;
   if (source_latest_frame_number.find(source_id) != source_latest_frame_number.end()) {
     latest_frame_number = source_latest_frame_number[source_id];
@@ -35,6 +38,8 @@ void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data
 
 ReturnFrameResult FrameBuffer::get_frames(unsigned int source_id, int frame_num,
                                           int num_frames, std::vector<MemoryBuffer> & frames) {
+  std::scoped_lock lock(guard);
+
   if (source_buffer_frames.find(source_id) != source_buffer_frames.end()) {
     std::unordered_map<int, MemoryBuffer> &frames_buffer = source_buffer_frames[source_id];
 

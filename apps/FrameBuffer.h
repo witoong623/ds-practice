@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <vector>
 #include <unordered_map>
 
@@ -29,6 +30,7 @@ class FrameBuffer {
   private:
     bool enable;
     int num_frames;
+    std::mutex guard;
 
     std::unordered_map<unsigned int, int> source_latest_frame_number;
     SourceBufferFrames source_buffer_frames;

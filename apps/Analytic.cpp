@@ -158,6 +158,7 @@ void Analytic::update_line_crossing_analysis(gint current_frame) {
           cv::VideoWriter video_writer {filename, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), 25, cv::Size(1920, 1080)};
 
           for (MemoryBuffer& frame : video_frames) {
+            // on average it takes 1.2 ms to convert a frame
             cv::Mat bgr_mat;
             cv::cvtColor(frame.get_mat_view(), bgr_mat, cv::COLOR_YUV2BGR_NV12);
             video_writer.write(bgr_mat);

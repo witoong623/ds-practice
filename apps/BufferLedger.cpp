@@ -41,7 +41,10 @@ MemoryBuffer::MemoryBuffer(const MemoryBuffer& other) {
 
 
 // TODO: calculate size of memory with alighment padding dynamically
+// 1080p buffer size
 static constexpr int NV12_GPU_BUFFER_SIZE = 3317760;
+// 720p buffer size
+// static constexpr int NV12_GPU_BUFFER_SIZE = 1658880;
 
 BufferLedger::BufferLedger(
     int num_buffers, int width, int height, MemoryType frame_type):
@@ -52,7 +55,10 @@ BufferLedger::BufferLedger(
     case MemoryType::NV12: {
       this->height = height * 3 / 2;
       type = CV_8UC1;
+      // 1080p buffer size
       step = 2048;
+      // 720p buffer size
+      // step = 1536;
       break;
     }
     case MemoryType::RGB: {

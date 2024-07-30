@@ -38,14 +38,12 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   pgie = gst_element_factory_make ("nvinfer", "primary-nvinference-engine");
   tracker = gst_element_factory_make ("nvtracker", "tracker");
   nvdslogger = gst_element_factory_make ("nvdslogger", "nvdslogger");
-  nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
-  nv12_filter = gst_element_factory_make ("capsfilter", "nv12-filter");
   branch_tee = gst_element_factory_make ("tee", "buf-tee");
 
   output_bin = build_output_bin(config_filepath);
   buffering_bin = build_buffering_bin(config_filepath);
 
-  if (!pgie || !nvdslogger || !tiler || !nvvidconv || !nvosd || !sink || !nv12_filter || !branch_tee || !buffering_bin) {
+  if (!pgie || !nvdslogger || !branch_tee || !buffering_bin || !output_bin) {
     auto err_msg = "One element could not be created. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
@@ -55,10 +53,6 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   THROW_ON_PARSER_ERROR(nvds_parse_gie(pgie, config_filepath, "primary-gie"));
   THROW_ON_PARSER_ERROR(nvds_parse_tracker(tracker, config_filepath, "tracker"));
 
-  g_object_set(G_OBJECT(nvvidconv), "nvbuf-memory-type", 3, nullptr);
-  GstCaps *nv12_caps = gst_caps_from_string("video/x-raw(memory:NVMM), format=NV12");
-  g_object_set(G_OBJECT(nv12_filter), "caps", nv12_caps, nullptr);
-  gst_caps_unref(nv12_caps);
 
   register_probs();
 
@@ -71,7 +65,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   }
 
   gst_bin_add_many (GST_BIN (pipeline), streammux, pgie, tracker, nvdslogger,
-    nvvidconv, nv12_filter, branch_tee, output_bin, buffering_bin, NULL);
+    branch_tee, output_bin, buffering_bin, NULL);
 
   // link sources to streammux
   for (int i = 0; i < sources.size(); i++) {
@@ -104,7 +98,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   }
 
   // link until branch_tee
-  if (!gst_element_link_many(streammux, pgie, tracker, nvdslogger, nvvidconv, nv12_filter, branch_tee, NULL)) {
+  if (!gst_element_link_many(streammux, pgie, tracker, nvdslogger, branch_tee, NULL)) {
     auto err_msg = "Elements could not be linked until nv12 filter. Exiting.\n";
     g_printerr ("%s", err_msg);
     throw std::runtime_error(err_msg);
@@ -214,24 +208,33 @@ GstElement *Pipeline::build_buffering_bin(gchar *config_filepath) {
   buf_queue = gst_element_factory_make ("queue", "buf-queue");
   buf_fakesink = gst_element_factory_make ("fakesink", "buf-fake-renderer");
 
-  if (!bin || !buf_queue || !buf_fakesink) {
+  nvvidconv = gst_element_factory_make ("nvvideoconvert", "nvvideo-converter");
+  nv12_filter = gst_element_factory_make ("capsfilter", "nv12-filter");
+
+  g_object_set(G_OBJECT(nvvidconv), "nvbuf-memory-type", 3, nullptr);
+  GstCaps *nv12_caps = gst_caps_from_string("video/x-raw(memory:NVMM), format=NV12");
+  // TODO: make the size configurable
+  // GstCaps *nv12_caps = gst_caps_from_string("video/x-raw(memory:NVMM), format=NV12, width=1280,height=720");
+  g_object_set(G_OBJECT(nv12_filter), "caps", nv12_caps, nullptr);
+  gst_caps_unref(nv12_caps);
+
+  if (!bin || !buf_queue || !buf_fakesink || !nvvidconv || !nv12_filter) {
     g_printerr("Buffering elements could not be created.\n");
     return nullptr;
   }
 
-  gst_bin_add_many(GST_BIN(bin), buf_queue, buf_fakesink, NULL);
+  gst_bin_add_many(GST_BIN(bin), buf_queue, buf_fakesink, nvvidconv, nv12_filter, nullptr);
 
-  if (!gst_element_link(buf_queue, buf_fakesink)) {
+  if (!gst_element_link_many(nvvidconv, nv12_filter, buf_queue, buf_fakesink, nullptr)) {
     g_printerr("Elements in buffering bin could not be linked.\n");
     return nullptr;
   }
 
-  GstPad *pad = gst_element_get_static_pad(buf_queue, "sink");
+  GstPad *pad = gst_element_get_static_pad(nvvidconv, "sink");
   if (!gst_element_add_pad(bin, gst_ghost_pad_new("sink", pad))) {
     g_printerr("Failed to add ghost pad in buffering bin.\n");
     return nullptr;
   }
-  
   gst_object_unref(pad);
 
   return bin;

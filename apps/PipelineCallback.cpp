@@ -129,12 +129,7 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
     // neeed CV_YUV2BGRA_NV12 to convert to BGRA
     // element size: 1, element without channel 1, total 3110400
     // cols: 1920, rows: 1620, step size 1920, 1 (appear to be rows major)
-    cv::Mat cv_frame = cv::Mat(surface->surfaceList[frame_meta->batch_id].height * 3 / 2,
-                              surface->surfaceList[frame_meta->batch_id].width,
-                              CV_8UC1,
-                              surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
-                              surface->surfaceList[frame_meta->batch_id].pitch);
-
+    // at 1280x720, data size is 1658880, pitch is 1536
     pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num,
                                           surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
                                           surface->surfaceList[frame_meta->batch_id].dataSize);

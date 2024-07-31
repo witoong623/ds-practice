@@ -19,6 +19,10 @@ public:
   ~ThreadPool();
 
   void post(std::packaged_task<void()> job);
+
+  // wait for all jobs in queue to be done
+  // should be called before application exit
+  void wait_jobs_done();
 private:
   void run() noexcept;
 
@@ -27,6 +31,8 @@ private:
   std::condition_variable cv;
   std::mutex guard;
   std::deque<std::packaged_task<void()>> pending_jobs;
+
+  std::atomic_int num_executing_jobs {0};
 };
 
 struct use_future_tag {};

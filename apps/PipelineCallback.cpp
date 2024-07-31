@@ -18,6 +18,7 @@ gboolean pipeline_bus_watch (GstBus * bus, GstMessage * msg, gpointer data) {
   GMainLoop *loop = pipeline->loop();
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_EOS:
+      pipeline->thread_pool().wait_jobs_done();
       g_print ("End of stream\n");
       g_main_loop_quit (loop);
       break;

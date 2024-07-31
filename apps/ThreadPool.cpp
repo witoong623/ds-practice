@@ -45,6 +45,32 @@ void ThreadPool::run() noexcept
       job.swap(pending_jobs.front());
       pending_jobs.pop_front();
     }
+    num_executing_jobs.fetch_add(1);
     job();
+    num_executing_jobs.fetch_sub(1);
+  }
+}
+
+void ThreadPool::wait_jobs_done() {
+  using namespace std::chrono_literals;
+
+  // make sure all jobs are taken from queue
+  std::unique_lock lock(guard, std::defer_lock);
+  while (true) {
+    lock.lock();
+
+    if (pending_jobs.empty()) {
+      lock.unlock();
+      cv.notify_all();
+      break;
+    }
+
+    lock.unlock();
+    cv.notify_all();
+    std::this_thread::sleep_for(1s);
+  }
+
+  while (num_executing_jobs.load() > 0) {
+    std::this_thread::sleep_for(1s);
   }
 }

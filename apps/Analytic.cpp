@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <iostream>
 #include <numeric>
 #include <vector>
 
@@ -152,6 +153,11 @@ void Analytic::update_line_crossing_analysis(gint current_frame) {
         {
           std::vector<MemoryBuffer> video_frames;
           auto get_frame_ret = temp_frame_buffer->get_frames(source_id, last_update_frame, 50, video_frames);
+
+          if (get_frame_ret == ReturnFrameResult::NOT_FOUND) {
+            std::cout << "Frame not found for source " << source_id << ", frame " << last_update_frame << std::endl;
+            return;
+          }
 
           char filename[16];
           std::sprintf(filename, "test-%lu.mp4", object_id);

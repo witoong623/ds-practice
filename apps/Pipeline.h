@@ -21,6 +21,7 @@ class Pipeline {
     inline Analytic &analytic() { return _analytic; }
     inline FrameBuffer &frame_buffer() { return _frame_buffer; }
     inline ThreadPool &thread_pool() { return _thread_pool; }
+    inline GMainLoop *loop() { return _loop; }
   private:
     std::vector<GstElement *> create_sources(gchar *config_filepath);
     GstElement *create_source_bin (guint index, gchar *uri);
@@ -31,7 +32,7 @@ class Pipeline {
     // should be called after all elements are configured
     void register_probs();
 
-    GMainLoop *loop;
+    GMainLoop *_loop;
 
     GstElement *streammux;
     GstElement *pgie;

@@ -14,7 +14,8 @@
 #define GST_CAPS_FEATURES_NVMM "memory:NVMM"
 
 gboolean pipeline_bus_watch (GstBus * bus, GstMessage * msg, gpointer data) {
-  GMainLoop *loop = (GMainLoop *) data;
+  Pipeline *pipeline = static_cast<Pipeline *>(data);
+  GMainLoop *loop = pipeline->loop();
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_EOS:
       g_print ("End of stream\n");

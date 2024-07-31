@@ -22,7 +22,7 @@
 
 constexpr int MAX_FRAME_BUFFER_SIZE = 300;
 
-Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
+Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): _loop(loop),
   _frame_buffer(MAX_FRAME_BUFFER_SIZE), _analytic(&_frame_buffer, &_thread_pool) {
   pipeline = gst_pipeline_new ("ds-practice-pipeline");
   streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
@@ -57,7 +57,7 @@ Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): loop(loop),
   register_probs();
 
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  bus_watch_id = gst_bus_add_watch (bus, pipeline_bus_watch, loop);
+  bus_watch_id = gst_bus_add_watch (bus, pipeline_bus_watch, this);
   gst_object_unref (bus);
 
   for (auto source : sources) {

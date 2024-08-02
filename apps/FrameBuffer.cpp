@@ -1,6 +1,7 @@
 #include "FrameBuffer.h"
 
 #include <mutex>
+#include <queue>
 #include <unordered_map>
 
 #include "opencv2/opencv.hpp"
@@ -15,25 +16,21 @@ FrameBuffer::FrameBuffer(std::size_t num_frames, bool enable):
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size) {
   std::scoped_lock lock(guard);
 
-  int latest_frame_number = -1;
-  if (source_latest_frame_number.find(source_id) != source_latest_frame_number.end()) {
-    latest_frame_number = source_latest_frame_number[source_id];
-  }
-
+  std::queue<int> &buffered_frame_nums = source_buffered_frame_nums[source_id];
   std::unordered_map<int, MemoryBuffer> &frames_buffer = source_buffer_frames[source_id];
 
   // remove oldest frame if buffer is full
-  if (frames_buffer.size() == num_frames) {
-    // + 1 because frame_num is 0-indexed
-    int oldest_frame_number = latest_frame_number - num_frames + 1;
+  if (buffered_frame_nums.size() >= num_frames) {
+    auto oldest_frame_number = buffered_frame_nums.front();
     frames_buffer.erase(oldest_frame_number);
+    buffered_frame_nums.pop();
   }
 
   MemoryBuffer buffer = buffer_ledger.get_empty_buffer();
   buffer.replace_data(data, size);
 
   frames_buffer.insert({frame_num, buffer});
-  source_latest_frame_number[source_id] = frame_num;
+  buffered_frame_nums.push(frame_num);
 }
 
 ReturnFrameResult FrameBuffer::get_frames(unsigned int source_id, int frame_num,

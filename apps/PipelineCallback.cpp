@@ -120,12 +120,12 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
   }
   NvBufSurface *surface = (NvBufSurface *)in_map_info.data;
 
+  if (NvBufSurfaceMap(surface, -1, -1, NVBUF_MAP_READ) != 0) {
+    g_printerr("Error: Failed to map surface\n");
+  }
+
   for (frame_meta_l = batch_meta->frame_meta_list; frame_meta_l != nullptr; frame_meta_l = frame_meta_l->next) {
     NvDsFrameMeta *frame_meta = (NvDsFrameMeta *)frame_meta_l->data;
-
-    if (NvBufSurfaceMap(surface, frame_meta->batch_id, -1, NVBUF_MAP_READ) != 0) {
-      g_printerr("Error: Failed to map surface\n");
-    }
 
     // data size 3317760, color 33, pitch 2048
     // neeed CV_YUV2BGRA_NV12 to convert to BGRA
@@ -135,10 +135,9 @@ GstPadProbeReturn frame_buffer_callback_prob (GstPad *pad, GstPadProbeInfo *info
     pipeline->frame_buffer().buffer_frame(frame_meta->source_id, frame_meta->frame_num,
                                           surface->surfaceList[frame_meta->batch_id].mappedAddr.addr[0],
                                           surface->surfaceList[frame_meta->batch_id].dataSize);
-
-    NvBufSurfaceUnMap(surface, frame_meta->batch_id, -1);
   }
 
+  NvBufSurfaceUnMap(surface, -1, -1);
   gst_buffer_unmap(buf, &in_map_info);
 
   return GST_PAD_PROBE_OK;

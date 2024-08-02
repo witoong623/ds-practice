@@ -9,7 +9,7 @@
 
 
 // TODO: allow setting dimension of memory buffer
-FrameBuffer::FrameBuffer(int num_frames, bool enable): 
+FrameBuffer::FrameBuffer(std::size_t num_frames, bool enable):
     num_frames(num_frames), enable(enable), buffer_ledger(num_frames, 1920, 1080, MemoryType::NV12) {}
 
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size) {

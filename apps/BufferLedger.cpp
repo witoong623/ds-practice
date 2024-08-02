@@ -47,7 +47,7 @@ static constexpr int NV12_GPU_BUFFER_SIZE = 3317760;
 // static constexpr int NV12_GPU_BUFFER_SIZE = 1658880;
 
 BufferLedger::BufferLedger(
-    int num_buffers, int width, int height, MemoryType frame_type):
+    std::size_t num_buffers, int width, int height, MemoryType frame_type):
     num_buffers(num_buffers), width(width), height(height) {
   
   // find all necessary info for createing memory buffer
@@ -75,7 +75,12 @@ BufferLedger::BufferLedger(
     }
   }
 
-  memory_pool = std::malloc(NV12_GPU_BUFFER_SIZE * num_buffers);
+  // TODO: find a better way to calculate BUFFER_SIZE
+  memory_pool_size = NV12_GPU_BUFFER_SIZE * num_buffers;
+  memory_pool = std::malloc(memory_pool_size);
+  if (memory_pool == nullptr) {
+    throw std::runtime_error("Error: failed to allocate memory pool");
+  }
 
   ledger.reserve(num_buffers);
   auto data_ptr = memory_pool;
@@ -93,6 +98,8 @@ BufferLedger::~BufferLedger() {
       delete ref_count;
     }
   }
+
+  std::free(memory_pool);
 }
 
 MemoryBuffer BufferLedger::get_empty_buffer() {

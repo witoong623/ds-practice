@@ -43,14 +43,14 @@ class MemoryBuffer {
 
 class BufferLedger {
   public:
-    explicit BufferLedger(int num_buffers, int width, int height, MemoryType frame_type);
+    explicit BufferLedger(std::size_t num_buffers, int width, int height, MemoryType frame_type);
     ~BufferLedger();
 
     [[nodiscard]] MemoryBuffer get_empty_buffer();
   private:
     std::vector<MemoryBuffer> ledger;
 
-    int num_buffers;
+    std::size_t num_buffers;
     int width;
     int height;
     int type;
@@ -58,4 +58,5 @@ class BufferLedger {
 
     // memory pool share by all memory buffers
     void *memory_pool;
+    std::size_t memory_pool_size;
 };

@@ -19,7 +19,7 @@ typedef std::unordered_map<unsigned int, std::unordered_map<int, MemoryBuffer>> 
 
 class FrameBuffer {
   public:
-    explicit FrameBuffer(int num_frames, bool enable = true);
+    explicit FrameBuffer(std::size_t num_frames, bool enable = true);
 
     // TODO: protect buffer and get function with mutex
     // frame is data from pipeline, need to copy it

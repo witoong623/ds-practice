@@ -20,7 +20,7 @@
     throw std::runtime_error(err_msg); \
   }
 
-constexpr int MAX_FRAME_BUFFER_SIZE = 300;
+constexpr std::size_t MAX_FRAME_BUFFER_SIZE = 300;
 
 Pipeline::Pipeline(GMainLoop *loop, gchar *config_filepath): _loop(loop),
   _frame_buffer(MAX_FRAME_BUFFER_SIZE), _analytic(&_frame_buffer, &_thread_pool) {

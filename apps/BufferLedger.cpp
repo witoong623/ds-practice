@@ -44,9 +44,9 @@ MemoryBuffer::MemoryBuffer(const MemoryBuffer& other) {
 
 // TODO: calculate size of memory with alighment padding dynamically
 // 1080p buffer size
-static constexpr int NV12_GPU_BUFFER_SIZE = 3317760;
+static constexpr std::size_t NV12_GPU_BUFFER_SIZE = 3317760;
 // 720p buffer size
-// static constexpr int NV12_GPU_BUFFER_SIZE = 1658880;
+// static constexpr std::size_t NV12_GPU_BUFFER_SIZE = 1658880;
 
 BufferLedger::BufferLedger(
     std::size_t num_buffers, int width, int height, MemoryType frame_type):
@@ -78,15 +78,17 @@ BufferLedger::BufferLedger(
   }
 
   // TODO: find a better way to calculate BUFFER_SIZE
+  // size_t can hold number of buffer of size NV12_GPU_BUFFER_SIZE upto 5 trillion buffers,
+  // so it is more than enough to hold only one memory pool
   memory_pool_size = NV12_GPU_BUFFER_SIZE * num_buffers;
   void *memory_pool;
-  auto malloc_ret = cudaMallocHost(&memory_pool, memory_pool_size);
+  cudaError_t malloc_ret = cudaMallocHost(&memory_pool, memory_pool_size);
   if (malloc_ret != cudaSuccess) {
     throw std::runtime_error("Error: failed to allocate memory pool");
   }
 
   ledger.reserve(num_buffers);
-  auto data_ptr = memory_pool;
+  void *data_ptr = memory_pool;
 
   for (int i = 0; i < num_buffers; i++) {
     ledger.emplace_back(this->width, this->height, type, data_ptr, NV12_GPU_BUFFER_SIZE, step);

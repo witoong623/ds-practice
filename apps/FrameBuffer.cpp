@@ -9,9 +9,10 @@
 #include "BufferLedger.h"
 
 
-// TODO: allow setting dimension of memory buffer
+constexpr std::size_t NUM_CAMERA = 1;
+
 FrameBuffer::FrameBuffer(std::size_t num_frames, bool enable):
-    num_frames(num_frames), enable(enable), buffer_ledger(num_frames, 1920, 1080, MemoryType::NV12) {}
+    num_frames(num_frames), enable(enable), buffer_ledger(num_frames * NUM_CAMERA * 2, 1920, 1080, MemoryType::NV12) {}
 
 void FrameBuffer::buffer_frame(unsigned int source_id, int frame_num, void *data, std::size_t size) {
   std::scoped_lock lock(guard);

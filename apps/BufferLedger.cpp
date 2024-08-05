@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include <cuda_runtime.h>
 #include "opencv2/opencv.hpp"
 #include "unistd.h"
 
@@ -12,9 +13,10 @@ MemoryBuffer::MemoryBuffer(): ref_count(nullptr) {}
 
 MemoryBuffer::MemoryBuffer(
     int width, int height, int type,
-    void *data, std::size_t size, std::size_t step):
+    void *data, std::size_t size, std::size_t pitch):
     data(data), ref_count(new std::atomic_int(0)),
-    mat_view(height, width, type, data, step) {}
+    mat_view(height, width, type, data, pitch),
+    width(width), height(height), pitch(pitch) {}
 
 MemoryBuffer::~MemoryBuffer() {
   if (ref_count != nullptr) {
@@ -77,8 +79,9 @@ BufferLedger::BufferLedger(
 
   // TODO: find a better way to calculate BUFFER_SIZE
   memory_pool_size = NV12_GPU_BUFFER_SIZE * num_buffers;
-  memory_pool = std::malloc(memory_pool_size);
-  if (memory_pool == nullptr) {
+  void *memory_pool;
+  auto malloc_ret = cudaMallocHost(&memory_pool, memory_pool_size);
+  if (malloc_ret != cudaSuccess) {
     throw std::runtime_error("Error: failed to allocate memory pool");
   }
 
@@ -99,7 +102,7 @@ BufferLedger::~BufferLedger() {
     }
   }
 
-  std::free(memory_pool);
+  cudaFree(memory_pool);
 }
 
 MemoryBuffer BufferLedger::get_empty_buffer() {
@@ -118,5 +121,5 @@ MemoryBuffer BufferLedger::get_empty_buffer() {
 }
 
 void MemoryBuffer::replace_data(void *data, std::size_t size) {
-  std::memcpy(this->data, data, size);
+  cudaMemcpy(this->data, data, size, cudaMemcpyDefault);
 }

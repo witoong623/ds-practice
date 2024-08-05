@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <vector>
-#include <unordered_map>
 
 #include "opencv2/opencv.hpp"
 
@@ -19,7 +18,7 @@ class MemoryBuffer {
     // empty memory buffer
     explicit MemoryBuffer();
     explicit MemoryBuffer(int width, int height, int type,
-                          void *data, std::size_t size, std::size_t step);
+                          void *data, std::size_t size, std::size_t pitch);
     ~MemoryBuffer();
 
     // copy constructor
@@ -38,6 +37,10 @@ class MemoryBuffer {
     void *data = nullptr;
     std::atomic_int *ref_count = nullptr;
     cv::Mat mat_view;
+
+    int width;
+    int height;
+    std::size_t pitch;
 };
 
 

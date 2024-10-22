@@ -144,6 +144,8 @@ void Analytic::update_line_crossing_analysis(gint current_frame) {
 
         analytic_info.crossing_direction_counts[direction]++;
         // on average it takes 1.2 ms to convert a frame
+        // by default, don't save video
+        continue;
 
         // avoid capture unnecessary variables
         auto last_update_frame = object_history->last_update_frame;

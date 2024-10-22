@@ -285,12 +285,13 @@ void Pipeline::register_probs() {
 
   gst_object_unref(tiler_sink_pad);
 
-  GstPad *buf_fakesink_sink_pad = gst_element_get_static_pad(buf_fakesink, "sink");
-  if (!buf_fakesink_sink_pad) {
-    g_print ("Unable to get fakesink's sink pad\n");
-  } else {
-    gst_pad_add_probe (buf_fakesink_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      frame_buffer_callback_prob, this, nullptr);
-  }
-  gst_object_unref(buf_fakesink_sink_pad);
+  // By default don't buffer frames
+  // GstPad *buf_fakesink_sink_pad = gst_element_get_static_pad(buf_fakesink, "sink");
+  // if (!buf_fakesink_sink_pad) {
+  //   g_print ("Unable to get fakesink's sink pad\n");
+  // } else {
+  //   gst_pad_add_probe (buf_fakesink_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
+  //     frame_buffer_callback_prob, this, nullptr);
+  // }
+  // gst_object_unref(buf_fakesink_sink_pad);
 }
